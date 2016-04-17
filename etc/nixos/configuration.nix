@@ -373,10 +373,16 @@ boot.blacklistedKernelModules = [
     };
   };
   #boot.extraModulePackages = [ linuxPackages.lttng-modules ];  # fails on linux 3.18+
+
+  boot.consoleLogLevel = 9; #aka kernel cmdline: loglevel=9  (default 4)
+
+  #Whether to delete all files in /tmp during boot. TODO: find out if this happens before /tmp is mounted as tmpfs!
+  boot.cleanTmpDir = true;
+
   boot.kernelParams = [
     "ipv6.disable=1"
     "pnp.debug=1"
-    "loglevel=9"
+#    "loglevel=9" #XXX: overriden by boot.consoleLogLevel
     "log_buf_len=10M"
     "printk.always_kmsg_dump=y"
     "printk.time=y"
