@@ -281,7 +281,6 @@ taskwarrior  # causes grep help text to be printed each time a new terminal is s
   boot.initrd.supportedFilesystems = [
     "btrfs"
   ];
-  boot.tmpOnTmpfs = true; #/tmp is on tmpfs ? yes!
 
   boot.kernel.sysctl = {
 
@@ -691,4 +690,42 @@ programs.bash.enableCompletion = true;
 
 virtualisation.virtualbox.host.enable = (hostname != vbox1);
 virtualisation.virtualbox.host.enableHardening = true;
+
+
+/*systemd.mounts = [
+#{ mountConfig."tmp.mount" = {
+#Options="mode=1777,strictatime,size=90%";
+#};
+#}
+{
+where = "/tmp";
+#what = "tmpfs";
+mountConfig = {
+Options="mode=1777,strictatime,size=90%";
+};
+}
+
+];
+ */
+ #the following is by/from: https://gist.github.com/sheenobu/09947df2480e693161d3b3d83daddd49
+boot.tmpOnTmpfs = false;
+#  boot.tmpOnTmpfs = true; #/tmp is on tmpfs ? yes! ok, not this time because overriden below!
+systemd.mounts = [
+{
+  unitConfig = {
+    DefaultDependencies = "no";
+    Conflicts = [ "umount.target" ];
+    Before = [ "local-fs.target" "umount.target" ];
+    ConditionPathIsSymbolicLink = "!/tmp";
+  };
+
+  where = "/tmp";
+  what = "tmpfs";
+  mountConfig = {
+    Type = "tmpfs";
+    Options = "mode=1777,strictatime,size=90%";
+  };
+}
+];
+
 }
