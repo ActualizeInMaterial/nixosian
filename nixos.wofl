@@ -1,0 +1,23 @@
+* switch to channel and update
+  * sudo nix-channel --add https://nixos.org/channels/nixos-unstable nixos
+    \ don't use nixos-unstable-small because xfce4 has no icons (eg. for xfce4-terminal)
+  * time sudo nixos-rebuild switch --upgrade
+* just switch
+  * time sudo nixos-rebuild switch
+
+* free space
+  \ src: https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html#sec-nix-gc
+  * hard-linking / optimise
+    * time sudo nix-store --optimise
+  * time sudo nix-collect-garbage
+    \ won't delete old configs (like from grub menu)
+    * to also delete old configs(like from grub menu, unsure if grub menu is updated tho)
+      \ time sudo nix-collect-garbage -d
+
+* use git repo as channel
+  \ this is a 'sudo git clone https://github.com/NixOS/nixpkgs.git' then 'sudo git remote add channels https://github.com/nixos/nixpkgs-channels' then 'sudo git fetch --all' then 'git reset --hard channels/nixos-unstable' if I want to use the binaries and compile less, or use latest git and compile more via 'sudo git reset --hard origin/master' and then 'time sudo nixos-rebuild switch --fallback' (--fallback to compile from sources, they say)
+  \ in /etc/nixos/configuration.nix add:
+  \ nixPath = [ "nixpkgs=/etc/nixos/nixpkgs" ];
+  \ under: nix = { };
+  \
+
