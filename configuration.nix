@@ -87,7 +87,8 @@ in  #from the above 'let'
         vim
           mc
           git
-          wkhtmltopdf
+          wkhtmltopdf #$ wkhtmltopdf https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html nixos_manuel.pdf
+
 # (callPackage ltsa {})
 #    (asciidoc-full.override { enableExtraPlugins = true; })
 #    anki  # flash card learning application
@@ -551,7 +552,7 @@ nix = {
     #2nd src: https://github.com/avnik/nixos-configs/blob/master/common/nix.nix#L23
   #also see: http://anderspapitto.com/posts/2015-11-01-nixos-with-local-nixpkgs-checkout.html
   nixPath = [
-    "nixpkgs=/etc/nixos/nixpkgs"
+    "nixpkgs=/etc/nixos/nixpkgs" #XXX: this is a 'sudo git clone https://github.com/NixOS/nixpkgs.git' then 'sudo git remote add channels https://github.com/nixos/nixpkgs-channels' then 'sudo git fetch --all' then 'git reset --hard channels/nixos-unstable' if I want to use the binaries and compile less, or use latest git and compile more via 'sudo git reset --hard origin/master' and then 'time sudo nixos-rebuild switch --fallback' (--fallback to compile from sources, they say)
 #      "nixos=/etc/nixpkgs/nixos" #dno what this is!
       "nixos-config=/etc/nixos/configuration.nix"
 #      "private=/home/avn/nixos/private"
