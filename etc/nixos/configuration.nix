@@ -87,6 +87,7 @@ in  #from the above 'let'
         vim
           mc
           git
+          wkhtmltopdf
 # (callPackage ltsa {})
 #    (asciidoc-full.override { enableExtraPlugins = true; })
 #    anki  # flash card learning application
@@ -535,12 +536,26 @@ system.stateVersion = "16.09";
 ##### Misc stuff (shellInit, powerManagement etc.) #####
 nix = {
   useChroot = true;
+  gc.automatic = true;
+  gc.dates = "03:15";#src: https://nixos.org/releases/nixos/14.12/nixos-14.12.374.61adf9e/manual/sec-nix-gc.html
+
 # To not get caught by the '''"nix-collect-garbage -d" makes "nixos-rebuild
 # switch" unusable when nixos.org is down"''' issue:
   extraOptions = ''
     gc-keep-outputs = true
+    gc-keep-derivations = true
     build-cores = 0  # 0 means auto-detect number of CPUs (and use all)
+    auto-optimise-store = true
+    binary-caches-parallel-connections = 10
     '';
+    #2nd src: https://github.com/avnik/nixos-configs/blob/master/common/nix.nix#L23
+  #also see: http://anderspapitto.com/posts/2015-11-01-nixos-with-local-nixpkgs-checkout.html
+  nixPath = [
+    "nixpkgs=/etc/nixos/nixpkgs"
+#      "nixos=/etc/nixpkgs/nixos" #dno what this is!
+      "nixos-config=/etc/nixos/configuration.nix"
+#      "private=/home/avn/nixos/private"
+  ];
 };
 
 
