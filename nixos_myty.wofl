@@ -1,0 +1,5 @@
+* install nixos on myty
+  * boot from usbstick
+  * setup network
+    * systemctl stop network-manager
+    * 
