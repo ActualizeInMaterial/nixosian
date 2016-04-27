@@ -33,7 +33,8 @@ in  #from the above 'let'
     }; #src: https://nixos.org/wiki/Installing_NixOS_in_a_VirtualBox_guest#Shared_Folders
   } else if myz575 == hostname then 
     throw "not set for myz575"
-      else throw "Missing fileSystems settings for hostname \"${hostname}\"";
+  else throw "Missing fileSystems settings for hostname \"${hostname}\"";
+  
 
 # List swap partitions activated at boot time.
 #swapDevices = [
@@ -52,7 +53,7 @@ in  #from the above 'let'
           "/dev/disk/by-id/ata-VBOX_HARDDISK_VB58dce9b3-6eca935a"
           else if myz575 == hostname then 
             throw "grub device for myz575 not yet set!"
-              else "Missing boot.loader.grub.device setting for hostname \"${hostname}\"";
+              else throw "Missing boot.loader.grub.device setting for hostname \"${hostname}\"";
       };
 
       services.nixosManual.enable = true;
