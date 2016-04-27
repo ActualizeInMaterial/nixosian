@@ -716,7 +716,7 @@ environment.etc = {
 ###  };
 };
 
-#FIXME: this isn't working with the above 'source=' even if it's just a file and not an url;
+#XXX: the following is ignored when using the above 'source=' even if it's just a file and not an url; (that is, only the source= is kept!)
 networking.extraHosts =
 ''
 #127.0.0.1 localhost ${config.networking.hostName}
