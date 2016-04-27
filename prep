@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#this is what you need to run to prep the files before using configuration.nix
+
+mkdir -p -- files/
+pushd files
+sudo wget -- http://winhelp2002.mvps.org/hosts.txt
+sha256sum -- hosts.txt
+popd
+
