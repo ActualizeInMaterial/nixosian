@@ -335,6 +335,11 @@ taskwarrior  # causes grep help text to be printed each time a new terminal is s
 #fs.nfs.nlm_tcpport = 0
 # UDP Port for lock manager
 #fs.nfs.nlm_udpport = 0
+
+  #sysctl.d
+  "vm.swappiness"=10;
+  "kernel.grsecurity.chroot_restrict_nice"=0;
+
   };
 
 # This fixes the touchpad resolution and 2-finger scroll on my Asus UL30A
@@ -660,11 +665,21 @@ environment.sessionVariables = {
 #FIXME: this overwrites whatever was there before! need to append instead!(and only once) or just put the wanted result on github and url to it here
 # Block advertisement domains (see
 # http://winhelp2002.mvps.org/hosts.htm)
-environment.etc."hosts".source =
-pkgs.fetchurl {
-  url = "http://winhelp2002.mvps.org/hosts.txt";
-  sha256 = "1vxkv7dcp4mavcm8jqs1fkmizqf6d35kw276d0jl1rxag449caap";
+environment.etc = {
+  hosts = { 
+    source = pkgs.fetchurl {
+      url = "http://winhelp2002.mvps.org/hosts.txt";
+      sha256 = "1vxkv7dcp4mavcm8jqs1fkmizqf6d35kw276d0jl1rxag449caap";
+    };
+    mode = "0440";
+  };
 };
+
+networking.extraHosts =
+''
+127.0.0.1 localhost ${config.networking.hostName}
+127.0.0.3 blockedHost
+'';
 
 # Make it easier to work with external scripts
 /*  system.activationScripts.fhsCompat = ''
