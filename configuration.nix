@@ -666,18 +666,81 @@ environment.sessionVariables = {
 # Block advertisement domains (see
 # http://winhelp2002.mvps.org/hosts.htm)
 environment.etc = {
+  "nsswitch.conf" = {
+/*    text = ''
+    passwd:    files
+    group:     files
+    shadow:    files
+    hosts:     files dns   myhostname mymachines
+    networks:  files dns
+    ethers:    files
+    services:  files
+    protocols: files
+    aliases: files*/
+    text = ''
+    # /etc/nsswitch.conf:
+    # $Header: /var/cvsroot/gentoo/src/patchsets/glibc/extra/etc/nsswitch.conf,v 1.1 2006/09/29 23:52:23 vapier Exp $
+
+    passwd:      compat
+    shadow:      compat
+    group:       compat
+
+    # passwd:    db files nis
+    # shadow:    db files nis
+    # group:     db files nis
+
+    hosts:       files dns
+    networks:    files dns
+
+    services:    db files
+    protocols:   db files
+    rpc:         db files
+    ethers:      db files
+    netmasks:    files
+    netgroup:    files
+    bootparams:  files
+
+    automount:   files
+    aliases:     files
+
+    '';
+  };
   hosts = { 
-    source = pkgs.fetchurl {
+    #TODO: find the var for /etc/nixos/ and use it below in source=
+    #source = "/etc/nixos/files/hosts.txt"; # sudo wget http://winhelp2002.mvps.org/hosts.txt
+/*    text = pkgs.fetchurl {
+      url = "file:///etc/nixos/files/hosts.txt"; # sudo wget http://winhelp2002.mvps.org/hosts.txt
+        sha256 = "1vxkv7dcp4mavcm8jqs1fkmizqf6d35kw276d0jl1rxag449caap";
+    };*/
+
+
+    text = builtins.readFile "/etc/nixos/files/hosts.txt";
+#    text = ''
+##wtw ${nix.nixPath.nixos-config} fail
+#    '';
+/*    source = pkgs.fetchurl {
       url = "http://winhelp2002.mvps.org/hosts.txt";
       sha256 = "1vxkv7dcp4mavcm8jqs1fkmizqf6d35kw276d0jl1rxag449caap";
-    };
-    mode = "0440";
+    };*/
+    mode = "0444"; #XXX: not 0440 ffs! https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/options.html#opt-environment.etc
   };
 };
 
+#FIXME: this isn't working with the above 'source=' even if it's just a file and not an url;
 networking.extraHosts =
 ''
-127.0.0.1 localhost ${config.networking.hostName}
+#127.0.0.1 localhost ${config.networking.hostName}
+#::1 localhost ${config.networking.hostName} #without this, hostname -f will cause an outgoing dns query for your hostname
+
+# IPv4 and IPv6 localhost aliases
+127.0.0.1 localhost.localdomain   localhost
+127.0.0.1 ${config.networking.hostName}
+#yourhostname here ^ or else  `hostname -f` will look it up by asking the DNS server in /etc/resolv.conf !!!
+#DON'T comment this even when ipv6 is disabled:
+::1             localhost.localdomain   localhost
+::1   localhost ${config.networking.hostName}
+#^ without that, `hostname -f` will DNS request it as `AAAA? hostname` where hostname is `uname -n` (or `hostname`)     
+
 127.0.0.3 blockedHost
 '';
 
