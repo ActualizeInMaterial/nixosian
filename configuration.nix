@@ -562,7 +562,7 @@ nix = {
     #2nd src: https://github.com/avnik/nixos-configs/blob/master/common/nix.nix#L23
   #also see: http://anderspapitto.com/posts/2015-11-01-nixos-with-local-nixpkgs-checkout.html
   nixPath = [
-    "nixpkgs=/etc/nixos/nixpkgs" #XXX: this is a 'sudo git clone https://github.com/NixOS/nixpkgs.git' then 'sudo git remote add channels https://github.com/nixos/nixpkgs-channels' then 'sudo git fetch --all' then 'git reset --hard channels/nixos-unstable' if I want to use the binaries and compile less, or use latest git and compile more via 'sudo git reset --hard origin/master' and then 'time sudo nixos-rebuild switch --fallback' (--fallback to compile from sources, they say)
+    "nixpkgs=/etc/nixos/nixpkgs" #XXX: this is a 'sudo git clone https://github.com/NixOS/nixpkgs.git' then 'sudo git remote add channels https://github.com/nixos/nixpkgs-channels' then 'sudo git fetch --all' then 'git reset --hard channels/nixos-unstable' if I want to use the binaries and compile less, or use latest git and compile more via 'sudo git reset --hard origin/master' and then 'time sudo nixos-rebuild switch --fallback' (--fallback to compile from sources, they say) - so, now the question is: do I need to add --update near --fallback or not?! apparently not, but also this is the equivalent cmd: nixos-rebuild switch --option build-fallback true  src: https://github.com/NixOS/nix/issues/807#issuecomment-209895935
 #      "nixos=/etc/nixpkgs/nixos" #dno what this is!
       "nixos-config=/etc/nixos/configuration.nix"
 #      "private=/home/avn/nixos/private"
