@@ -80,7 +80,7 @@ in  #from the above 'let'
       };
 
 # Set your time zone.
-      time.timeZone = "Europe/Budapest";
+      time.timeZone = "Europe/Bucharest";
 
 # List packages installed in system profile. To search by name, run:
 # $ nix-env -qaP | grep wget
@@ -696,7 +696,7 @@ environment.etc = {
 
     '';
   };*/
-###  hosts = { 
+#  hosts = { 
     #TODO: find the var for /etc/nixos/ and use it below in source=
     #source = "/etc/nixos/files/hosts.txt"; # sudo wget http://winhelp2002.mvps.org/hosts.txt
 /*    text = pkgs.fetchurl {
@@ -707,14 +707,15 @@ environment.etc = {
 
 ###    text = builtins.readFile "/etc/nixos/files/hosts.txt";
 #    text = ''
-##wtw ${nix.nixPath.nixos-config} fail
+#127.0.0.1 localhost.localdomain localhost
 #    '';
+##wtw ${nix.nixPath.nixos-config} fail
 /*    source = pkgs.fetchurl {
       url = "http://winhelp2002.mvps.org/hosts.txt";
       sha256 = "1vxkv7dcp4mavcm8jqs1fkmizqf6d35kw276d0jl1rxag449caap";
     };*/
-###    mode = "0444"; #XXX: not 0440 ffs! https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/options.html#opt-environment.etc
-###  };
+#    mode = "0444"; #XXX: not 0440 ffs! https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/options.html#opt-environment.etc
+#  };
 };
 
 #XXX: the following is ignored when using the above 'source=' even if it's just a file and not an url; (that is, only the source= is kept!)
@@ -737,6 +738,7 @@ networking.extraHosts =
 127.0.0.3 blockedHost blockedHost
 
 '' + builtins.readFile "/etc/nixos/files/hosts.txt";
+
 #TODO: replace 0.0.0.0 for blocked hosts.txt with 127.0.0.3 !
 
 # Make it easier to work with external scripts
