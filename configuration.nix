@@ -64,7 +64,7 @@ in  #from the above 'let'
 #    networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
 
       networking = {
-        hostName = hostname;
+        hostName = hostname; #XXX: if never set inhere, defaults to 'nixos'
         firewall.enable = true;
         firewall.allowPing = false; #ipv6 ping is always allowed, src: https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html#sec-firewall
           networkmanager.enable = false;
@@ -86,6 +86,7 @@ in  #from the above 'let'
 # $ nix-env -qaP | grep wget
       environment.systemPackages = with pkgs; [
         vim
+        x11vnc
           mc
           git
           wkhtmltopdf #$ wkhtmltopdf https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html nixos_manuel.pdf
@@ -543,6 +544,9 @@ system.stateVersion = "16.09";
 ##### Misc stuff (shellInit, powerManagement etc.) #####
 nix = {
   useChroot = true;
+  readOnlyStore = true; #src: https://github.com/avnik/nixos-configs/blob/master/common/nix.nix
+  buildCores = 4;    # -j4 for subsequent make calls; XXX: is this same as 'build-cores' below in extraOptions?
+  #maxJobs = 2;       # Parallel nix builds
   gc.automatic = true;
   gc.dates = "03:15";#src: https://nixos.org/releases/nixos/14.12/nixos-14.12.374.61adf9e/manual/sec-nix-gc.html
 
@@ -565,6 +569,7 @@ nix = {
   ];
 };
 
+  systemd.services.nix-daemon.environment.TMPDIR = "/tmp";
 
 security.setuidOwners = [
 { # Limit access to dumpcap to root and members of the wireshark group.
