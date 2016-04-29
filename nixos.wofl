@@ -21,4 +21,20 @@
   \ under: nix = { };
   \
 
+* nix-repl
+  \ thanks to 'clever' on #nixos freenode irc
+  * tabcompletion
+    * :l <nixpkgs>
+      \ Added 6145 variables.
+    * type: firefox  then tab tab
+      \ to see completions
+  * build package hello with debugging info so you can run gdb
+    * :b enableDebugging hello
+* find which package has command
+  * hack
+    \ thanks to 'clever' on #nixos freenode irc
+    \ src: http://pastebin.com/raw/tnKSSshd
+    * # sqlite3 /nix/var/nix/profiles/per-user/root/channels/nixos/programs.sqlite 
+    * select * from Programs where name = "lspci";
+
 

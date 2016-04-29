@@ -87,6 +87,7 @@ in  #from the above 'let'
       environment.systemPackages = with pkgs; [
         vim
         x11vnc
+        nix-repl
           mc
           git
           wkhtmltopdf #$ wkhtmltopdf https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html nixos_manuel.pdf
@@ -443,6 +444,7 @@ boot.kernelParams = [
   ];
 
 
+  services.locate.enable = true;
 # Enable the OpenSSH daemon.
 #      services.openssh.enable = true; #FIXME: conflicting definitions
 
@@ -545,6 +547,7 @@ system.stateVersion = "16.09";
 nix = {
   useChroot = true;
   readOnlyStore = true; #src: https://github.com/avnik/nixos-configs/blob/master/common/nix.nix
+#  readOnlyStore = false; #FIXME: undo this, was for testing if sudo updatedb works with this applied: https://github.com/NixOS/nixpkgs/pull/14686
   buildCores = 4;    # -j4 for subsequent make calls; XXX: is this same as 'build-cores' below in extraOptions?
   #maxJobs = 2;       # Parallel nix builds
   gc.automatic = true;
