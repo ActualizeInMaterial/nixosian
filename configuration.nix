@@ -25,15 +25,15 @@ in  #from the above 'let'
     ];
 
 #FIXME: is there a match?!
-  fileSystems = if vbox1 == hostname then {
+  fileSystems = if vbox1 == config.networking.hostName then {
     "/vmsh" = {
       fsType = "vboxsf";
       device = "vmsharedfolder";
       options = [ "rw" ];
     }; #src: https://nixos.org/wiki/Installing_NixOS_in_a_VirtualBox_guest#Shared_Folders
-  } else if myz575 == hostname then 
+  } else if myz575 == config.networking.hostName then 
     throw "not set for myz575"
-  else throw "Missing fileSystems settings for hostname \"${hostname}\"";
+  else throw "Missing fileSystems settings for hostname \"${config.networking.hostName}\"";
   
 
 # List swap partitions activated at boot time.
@@ -49,11 +49,11 @@ in  #from the above 'let'
         version = 2;
 # Define on which hard drive you want to install Grub.
 #  boot.loader.grub.device = "/dev/sda";
-        device = if vbox1 == hostname then
+        device = if vbox1 == config.networking.hostName then
           "/dev/disk/by-id/ata-VBOX_HARDDISK_VB58dce9b3-6eca935a"
-          else if myz575 == hostname then 
+          else if myz575 == config.networking.hostName then 
             throw "grub device for myz575 not yet set!"
-              else throw "Missing boot.loader.grub.device setting for hostname \"${hostname}\"";
+              else throw "Missing boot.loader.grub.device setting for hostname \"${config.networking.hostName}\"";
       };
 
       services.nixosManual.enable = true;
@@ -221,7 +221,7 @@ in  #from the above 'let'
 #    sigrok-cli
 #    silver-searcher
           simplescreenrecorder
-          /*    (if hostname == myLaptop then
+          /*    (if config.networking.hostName == myLaptop then
 # My laptop (Asus UL30A) has upside down webcam. Flip it back.
 let
 libv4l_i686 = callPackage_i686 <nixpkgs/pkgs/os-specific/linux/v4l-utils> { qt5 = null; };
@@ -279,12 +279,13 @@ taskwarrior  # causes grep help text to be printed each time a new terminal is s
   ];
 
 # List services that you want to enable:
-#virtualisation.virtualbox.guest.enable = true; #already in hardware*nix
+  virtualisation.virtualbox.guest.enable = (config.networking.hostName == vbox1); #already true in hardware*.nix
 
 #Whether to run fsck on journaling filesystems such as ext3.
-  boot.initrd.checkJournalingFS = false;
+  boot.initrd.checkJournalingFS = false; #(for ext4, at least) "remove the fsck that runs at startup. It will always fail to run, stopping your boot until you press *."  src: https://nixos.org/wiki/Installing_NixOS_in_a_VirtualBox_guest#Basic_Configuration
   boot.initrd.supportedFilesystems = [
     "btrfs"
+    "tmpfs" #XXX: unsure if needed here
   ];
 
   boot.kernel.sysctl = {
@@ -380,7 +381,7 @@ boot.blacklistedKernelModules = [
 
   boot.kernelPackages = linuxPackages // {
   virtualbox = linuxPackages.virtualbox.override {
-    enableExtensionPack = (myz575 == hostname);
+    enableExtensionPack = (myz575 == config.networking.hostName);
   };
 };
 #boot.extraModulePackages = [ linuxPackages.lttng-modules ];  # fails on linux 3.18+
@@ -445,6 +446,7 @@ boot.kernelParams = [
 
 
   services.locate.enable = true;
+  services.locate.includeStore = true;
 # Enable the OpenSSH daemon.
 #      services.openssh.enable = true; #FIXME: conflicting definitions
 
@@ -464,7 +466,7 @@ boot.kernelParams = [
 #  services.xserver.xkbOptions = "eurosign:e";
 
   services.xserver = 
-  if myz575 == hostname then {
+  if myz575 == config.networking.hostName then {
     synaptics.enable = true;
     synaptics.twoFingerScroll = true;
   } else {} // {
@@ -635,7 +637,7 @@ environment.shellAliases = {
   "..4" = "cd ../../../..";
 };
 
-/*environment.shellInit = lib.optionalString (hostname == myLaptop) ''
+/*environment.shellInit = lib.optionalString (config.networking.hostName == myLaptop) ''
 # "xset" makes my Asus UL30A touchpad move quite nicely.
 test -n "$DISPLAY" && xset mouse 10/4 0
 '';
@@ -787,7 +789,7 @@ PS1='\n$(ret=$?; test $ret -ne 0 && printf "\[\e[$__red\]$ret\[\e[0m\] ")\[\e[$_
 
 programs.bash.enableCompletion = true;
 
-virtualisation.virtualbox.host.enable = (hostname != vbox1);
+virtualisation.virtualbox.host.enable = (config.networking.hostName != vbox1);
 virtualisation.virtualbox.host.enableHardening = true;
 
 
@@ -809,7 +811,8 @@ Options="mode=1777,strictatime,size=90%";
  #the following is by/from: https://gist.github.com/sheenobu/09947df2480e693161d3b3d83daddd49
 boot.tmpOnTmpfs = false;
 #  boot.tmpOnTmpfs = true; #/tmp is on tmpfs ? yes! ok, not this time because overriden below!
-systemd.mounts = [
+
+/*systemd.mounts = [
 {
   unitConfig = {
     DefaultDependencies = "no";
@@ -825,6 +828,6 @@ systemd.mounts = [
     Options = "mode=1777,strictatime,size=90%";
   };
 }
-];
+];*/
 
 }
