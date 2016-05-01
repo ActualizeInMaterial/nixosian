@@ -26,7 +26,10 @@ in  #from the above 'let'
 
 #FIXME: is there a match?!
   fileSystems = if vbox1 == config.networking.hostName then {
-    "/vmsh" = {
+    "/vmsh" = { #also /media/sf_vmsharedfolder is mounted!
+    #vmsharedfolder on /media/sf_vmsharedfolder type vboxsf (rw,nodev,relatime)
+    #vmsharedfolder on /vmsh type vboxsf (rw,nodev,relatime)
+
       fsType = "vboxsf";
       device = "vmsharedfolder";
       options = [ "rw" ];
@@ -82,6 +85,16 @@ in  #from the above 'let'
 # Set your time zone.
       time.timeZone = "Europe/Bucharest";
 
+#TODO: get ccache to work globally; however, FIXME: ? when first installing ccache, cannot use ccache to compile it! (the following doesn't work globally:)
+#      config.replaceStdenv = { pkgs }: pkgs.ccacheStdenv;
+#src: https://github.com/NixOS/nixpkgs/pull/14382/files   https://github.com/NixOS/nixpkgs/issues/9022#issue-97622899
+#      config.packageOverrides = pkgs: {
+#        ccacheWrapper = pkgs.ccacheWrapper.override {
+#          extraConfig = ''
+#            export CCACHE_COMPRESS=0 CCACHE_NOCOMPRESS=1 CCACHE_COMPRESSLEVEL=0 CCACHE_BASEDIR=/tmp CCACHE_DIR=/ccache CCACHE_UMASK=0002 CCACHE_MAXSIZE=200G
+#            '';
+#        };
+#      };
 # List packages installed in system profile. To search by name, run:
 # $ nix-env -qaP | grep wget
       environment.systemPackages = with pkgs; [
@@ -90,6 +103,9 @@ in  #from the above 'let'
         nix-repl
           mc
           git
+          ccache
+
+          #FIXME: wkhtmltopdf fails to build on git nixpkgs! https://github.com/NixOS/nixpkgs/issues/11861#issuecomment-215982683
           wkhtmltopdf #$ wkhtmltopdf https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html nixos_manuel.pdf
 
 # (callPackage ltsa {})
@@ -770,7 +786,9 @@ fi
 # Show git info in bash prompt and display a colorful hostname if using ssh.
 programs.bash.promptInit = ''
 export GIT_PS1_SHOWDIRTYSTATE=1
+#echo '1' 2>&1
 source ${pkgs.gitAndTools.gitFull}/share/git/contrib/completion/git-prompt.sh
+#echo '2' 2>&1
 __prompt_color="1;32m"
 # Alternate color for hostname if the generated color clashes with prompt color
 __alternate_color="1;33m"
@@ -784,8 +802,12 @@ __hostnamecolor="$__alternate_color"
 fi
 fi
 __red="1;31m"
+#echo '3' 2>&1
 PS1='\n$(ret=$?; test $ret -ne 0 && printf "\[\e[$__red\]$ret\[\e[0m\] ")\[\e[$__prompt_color\]\u@\[\e[$__hostnamecolor\]\h \[\e[$__prompt_color\]\w$(__git_ps1 " [git:%s]")\[\e[0m\]\n$ '
+#echo '4' 2>&1 #FIXME: that grep error is beyond this, lookslike
 '';
+
+#TODO: add alias in .bashrc ? ls -rlact  for showing the right date/timestamp in /nix/store/
 
 programs.bash.enableCompletion = true;
 
