@@ -83,6 +83,10 @@ in  #from the above 'let'
         wicd.enable = false; #src: https://github.com/manpages/dotfiles/blob/ac402986172c9a4842d067316979cc23a2a187ea/nixos/xserver/wicd.nix
         dhcpcd.extraConfig = "nohook resolv.conf"; #dhcpcd's configuration file may be edited to prevent the dhcpcd daemon from overwriting /etc/resolv.conf. To do this, add the following to the last section of /etc/dhcpcd.conf:  src: https://wiki.archlinux.org/index.php/resolv.conf#Modify_the_dhcpcd_config
         nameservers = [ "8.8.8.8" "8.8.4.4" ];
+        extraResolvconfConf = ''
+        resolv_conf_options=' ndots:1 timeout:3 attempts:1 rotate '
+        '';
+        dnsSingleRequest = true;
       };
 # Select internationalisation properties.
       i18n = {
