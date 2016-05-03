@@ -15,7 +15,9 @@ hostname = vbox1; # select one from above
 #  myDomain = "idno.name"; # src: https://github.com/bjornfor/nixos-config/blob/master/configuration.nix
 
 #linux kernel version:
+#latest linux rc! thanks to: https://github.com/NixOS/nixpkgs/pull/15149#issuecomment-216111355
 linuxPackages = pkgs.linuxPackages_4_5;
+#when pkgs.linuxPackages_testing, apparently it recompiles shiet every time!
 
 in  #from the above 'let'
 {
@@ -70,10 +72,12 @@ in  #from the above 'let'
         hostName = hostname; #XXX: if never set inhere, defaults to 'nixos'
         firewall.enable = true;
         firewall.allowPing = false; #ipv6 ping is always allowed, src: https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html#sec-firewall
-          networkmanager.enable = false;
         enableWLAN = false;
         enableIPv6 = false;
+
+        networkmanager.enable = false;
         wireless.enable = false;
+        #XXX: Note: networking.networkmanager and networking.wireless can not be enabled at the same time: you can still connect to the wireless networks using NetworkManager. src: https://nixos.org/nixos/manual/index.html#sec-installation
       };
 # Select internationalisation properties.
       i18n = {
@@ -106,7 +110,7 @@ in  #from the above 'let'
           ccache
 
           #FIXME: wkhtmltopdf fails to build on git nixpkgs! https://github.com/NixOS/nixpkgs/issues/11861#issuecomment-215982683
-          wkhtmltopdf #$ wkhtmltopdf https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html nixos_manuel.pdf
+#          wkhtmltopdf #$ wkhtmltopdf https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html nixos_manuel.pdf
 
 # (callPackage ltsa {})
 #    (asciidoc-full.override { enableExtraPlugins = true; })
@@ -395,9 +399,13 @@ boot.blacklistedKernelModules = [
 
   ];
 
+  #TODO: force latest (or manually set) virtual box (guest)modules for 5.0.20 (currently 5.0.14) because they won't compile with 4.6_rc6 otherwise
+
   boot.kernelPackages = linuxPackages // {
   virtualbox = linuxPackages.virtualbox.override {
-    enableExtensionPack = (myz575 == config.networking.hostName);
+    #enableExtensionPack = (myz575 == config.networking.hostName);
+    enableExtensionPack = false; #we don't need/use this!
+    pulseSupport = true;
   };
 };
 #boot.extraModulePackages = [ linuxPackages.lttng-modules ];  # fails on linux 3.18+
@@ -463,14 +471,16 @@ boot.kernelParams = [
 
   services.locate.enable = true;
   services.locate.includeStore = true;
+  services.ntp.enable = false;
 # Enable the OpenSSH daemon.
-#      services.openssh.enable = true; #FIXME: conflicting definitions
+
+  services.openssh.enable = vbox1 == config.networking.hostName;
+  #services.sshd.enable = false; #conflicting definitions when using this 'alias' with the above, and it's different value!
 
 # Enable CUPS to print documents.
   services.printing.enable = false;
 
   services.gpm.enable = false;
-  services.sshd.enable = false;
 
 #src: https://web.archive.org/web/20140704130237/https://nixos.org/repos/nix/configurations/trunk/misc/eelco/hobbit.nix
   fonts.enableGhostscriptFonts = false; #XXX: .exe ?
@@ -641,7 +651,8 @@ nixpkgs.config = {
 
 hardware.pulseaudio.enable = true;
 hardware.bluetooth.enable = false;
-#      hardware.opengl.driSupport32Bit = true;
+#On 64-bit systems, if you want full acceleration for 32-bit programs such as Wine, you should also set the following:
+hardware.opengl.driSupport32Bit = vbox1 != config.networking.hostName;
 # KDE displays a warning if this isn't enabled
 powerManagement.enable = true;
 

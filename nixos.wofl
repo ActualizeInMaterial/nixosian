@@ -37,4 +37,36 @@
     * # sqlite3 /nix/var/nix/profiles/per-user/root/channels/nixos/programs.sqlite 
     * select * from Programs where name = "lspci";
 
+* packages
+  \ src: https://bluishcoder.co.nz/2014/05/14/installing-nixos-with-encrypted-root-on-thinkpad-w540.html
+  * search for package name
+    \ nix-env -qaP '*'|grep -i -- vim
+  * locally add your own packages(for your current user, not globally)
+    \ nix-env -i vim
+  * locally remove packages
+    \ nix-env -e vim
+
+* sane configuration.nix example
+  \ https://github.com/manpages/dotfiles/blob/ac402986172c9a4842d067316979cc23a2a187ea/nixos/gpu.nix
+  \ switch to master to see latest version, I guess.
+
+
+* how to connect from host to the ssh from virtualbox
+  - ssh root@192.168.0.1  if used Bridged
+  * ssh ... if using NAT
+    * you need to forward port 22
+      \ http://ask.xmodulo.com/access-nat-guest-from-host-virtualbox.html
+      * ifconfig
+        \ see what's the ip of the guest OS
+        \ 10.0.2.15
+      * Machine->Settings->Network->Port Forwarding (button)
+        \ Name: sshd
+        \ Protocol: TCP
+        \ Host IP: 127.0.0.111
+        \ Host Port: 8822
+        \ ^ (any unused port higher than 1024) unless u're running virtualbox as root(don't!)
+        \ Guest IP: 10.0.2.15
+        \ Guest Port: 22
+    * ssh -v -p 8822 127.0.0.111 -l root
+
 
