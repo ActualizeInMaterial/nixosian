@@ -535,7 +535,7 @@ users.extraUsers = {
 #        "dialout"
 #        "docker"
 #        "libvirtd"
-        "networkmanager"
+#        "networkmanager" #fails to build, thanks git!
         "plugdev"
         "systemd-journal"
         "tracing"
