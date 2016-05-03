@@ -26,6 +26,7 @@ in  #from the above 'let'
     ./hardware-configuration.nix
     ];
 
+
 #FIXME: is there a match?!
   fileSystems = if vbox1 == config.networking.hostName then {
     "/vmsh" = { #also /media/sf_vmsharedfolder is mounted!
@@ -74,10 +75,14 @@ in  #from the above 'let'
         firewall.allowPing = false; #ipv6 ping is always allowed, src: https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html#sec-firewall
         enableWLAN = false;
         enableIPv6 = false;
+        useDHCP = vbox1 == config.networking.hostName;
 
         networkmanager.enable = false;
         wireless.enable = false;
         #XXX: Note: networking.networkmanager and networking.wireless can not be enabled at the same time: you can still connect to the wireless networks using NetworkManager. src: https://nixos.org/nixos/manual/index.html#sec-installation
+        wicd.enable = false; #src: https://github.com/manpages/dotfiles/blob/ac402986172c9a4842d067316979cc23a2a187ea/nixos/xserver/wicd.nix
+        dhcpcd.extraConfig = "nohook resolv.conf"; #dhcpcd's configuration file may be edited to prevent the dhcpcd daemon from overwriting /etc/resolv.conf. To do this, add the following to the last section of /etc/dhcpcd.conf:  src: https://wiki.archlinux.org/index.php/resolv.conf#Modify_the_dhcpcd_config
+        nameservers = [ "8.8.8.8" "8.8.4.4" ];
       };
 # Select internationalisation properties.
       i18n = {
@@ -472,6 +477,9 @@ boot.kernelParams = [
   services.locate.enable = true;
   services.locate.includeStore = true;
   services.ntp.enable = false;
+  services.nscd.enable = true; #caching daemon for DNS
+  services.bind.enable = false;
+  services.dnsmasq.enable = false;
 # Enable the OpenSSH daemon.
 
   services.openssh.enable = vbox1 == config.networking.hostName;
@@ -641,11 +649,22 @@ security.sudo = {
 nixpkgs.config = {
   allowUnfree = false;  # allow proprietary packages
     firefox.enableAdobeFlash = false;
+    firefox.enableGoogleTalkPlugin = false;
   chromium.enablePepperFlash = false;
   packageOverrides = pkgs: {
 #qtcreator = pkgs.qtcreator.override { qt48 = pkgs.qt48Full; };
 #qemu = pkgs.qemu.override { spiceSupport = true; };
   };
+
+  config.replaceStdenv = { pkgs }: pkgs.ccacheStdenv;
+  config.packageOverrides = pkgs: {
+    ccacheWrapper = pkgs.ccacheWrapper.override {
+      extraConfig = ''
+        export CCACHE_COMPRESS=0 CCACHE_NOCOMPRESS=1 CCACHE_COMPRESSLEVEL=0 CCACHE_BASEDIR=/tmp CCACHE_DIR=/ccache CCACHE_UMASK=0002 CCACHE_MAXSIZE=200G
+        '';
+    };
+  };
+
 };
 
 
@@ -754,6 +773,7 @@ environment.etc = {
 #    mode = "0444"; #XXX: not 0440 ffs! https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/options.html#opt-environment.etc
 #  };
 };
+
 
 #XXX: the following is ignored when using the above 'source=' even if it's just a file and not an url; (that is, only the source= is kept!)
 networking.extraHosts =
