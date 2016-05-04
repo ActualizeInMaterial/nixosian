@@ -85,8 +85,8 @@ in  #from the above 'let'
         nameservers = [ "8.8.8.8" "8.8.4.4" ];
         extraResolvconfConf = ''
         resolv_conf_options=' ndots:1 timeout:3 attempts:1 rotate '
-        '';
-        dnsSingleRequest = true;
+        ''; #FIXME: the = overrides all prev. stuff(like the below dnsSingleRequest = true) due to += doubling shiet, as explained below:
+#        dnsSingleRequest = true; #FIXME: well, this gets doubled due to a resolvconf bug where only += is used and the var was never inited (via = )!  Anyway, I'm looking into Guix and GuixSD, so... hopefully I won't have to get back to this!
       };
 # Select internationalisation properties.
       i18n = {
