@@ -36,15 +36,20 @@
     * now you can mount
       \ mount -t vboxsf vmsharedfolder /vmsh
   * cp /vmsh/configuration.nix /mnt/etc/nixos/
+  * cp /vmsh/prep /mnt/etc/nixos/
+  * cd /mnt/etc/nixos
+  * ./prep
+    \ this also git clones! because it does 'nix-env wget git' (internally)
   * edit the hdd id for grub boot
     * ls -la /dev/disk/by-id/
       \ see the one with /dev/sda
       \ put it in configuration.nix under /dev/disk/by-id/...
   * setterm --powerdown 0 --blank 0 --powersave off
     \ to prevent the term from getting black and then not seeing why/where it crashed!
-  * time nixos-install
-    \ crashed with guru meditation after a while!
+  * time NIX_PATH="nixpkgs=/mnt/etc/nixos/nixpkgs" nixos-install
+    \ //crashed virtualbox with guru meditation after a while!(without KVM in kernel)
     \ gettext, binutils and anything from ftpmirror.gnu.org ... is slow max 190KB/sec
+    \ can't use the path without /mnt !
   * sync
   * umount /mnt
   * sync

@@ -272,7 +272,7 @@ skype
 #    spice
 #    spotify
 #    sqlite-interactive
-    sqlite3
+    sqlite
 #    srecord
 #    stdmanpages
 #    subversion

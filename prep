@@ -10,7 +10,7 @@ test "`id -u`" -eq "0"
 
 mkdir -p -- files/
 pushd files
-wget -- http://winhelp2002.mvps.org/hosts.txt
+wget -N -- http://winhelp2002.mvps.org/hosts.txt
 sha256sum -- hosts.txt
 popd
 
