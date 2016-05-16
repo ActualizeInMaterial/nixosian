@@ -2,9 +2,26 @@
 
 #this is what you need to run to prep the files before using configuration.nix
 
+set -e -x
+
 mkdir -p -- files/
 pushd files
 sudo wget -- http://winhelp2002.mvps.org/hosts.txt
 sha256sum -- hosts.txt
 popd
+
+sudo git clone https://github.com/NixOS/nixpkgs.git
+pushd nixpkgs
+sudo git remote add channels https://github.com/nixos/nixpkgs-channels
+
+#these two must be run every time you want to update(refs too):
+sudo git fetch --all
+sudo git reset --hard channels/nixos-16.03
+
+#now manually do: time sudo nixos-rebuild switch
+#add: --fallback if using the git master branch instead of a channel! to build from sources!
+
+popd
+
+
 

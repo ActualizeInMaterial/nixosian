@@ -3,6 +3,7 @@
     \ don't use nixos-unstable-small because xfce4 has no icons (eg. for xfce4-terminal)
   * time sudo nixos-rebuild switch --upgrade
 * just switch
+  \ CAVEAT: new kernel modules(such as vboxsf.ko) cannot be found via modprobe until you reboot into that newly built profile, else you can find them in /nix/store/ somewhere and can insmod (not modprobe!) vboxguest first then vboxsf.
   * time sudo nixos-rebuild switch
 
 * free space
@@ -15,7 +16,7 @@
       \ time sudo -i -- nix-collect-garbage -d
 
 * use git repo as channel
-  \ this is a 'sudo git clone https://github.com/NixOS/nixpkgs.git' then 'sudo git remote add channels https://github.com/nixos/nixpkgs-channels' then 'sudo git fetch --all' then 'git reset --hard channels/nixos-unstable' if I want to use the binaries and compile less, or use latest git and compile more via 'sudo git reset --hard origin/master' and then 'time sudo nixos-rebuild switch --fallback' (--fallback to compile from sources, they say) - so, now the question is: do I need to add --update near --fallback or not?! apparently not, but also this is the equivalent cmd: https://github.com/NixOS/nix/issues/807#issuecomment-209895935
+  \ this is a 'sudo git clone https://github.com/NixOS/nixpkgs.git' then 'sudo git remote add channels https://github.com/nixos/nixpkgs-channels' then 'sudo git fetch --all'(always do this fetch before the reset that follows to keep those refs up to date!) then 'git reset --hard channels/nixos-unstable' (or 'channels/nixos-16.03' for the current stable which seems ahead of nixos-unstable ) if I want to use the binaries and compile less, or use latest git and compile more via 'sudo git reset --hard origin/master' and then 'time sudo nixos-rebuild switch --fallback' (--fallback to compile from sources, they say) - so, now the question is: do I need to add --update near --fallback or not?! apparently not, but also this is the equivalent cmd: https://github.com/NixOS/nix/issues/807#issuecomment-209895935
   \ in /etc/nixos/configuration.nix add:
   \ nixPath = [ "nixpkgs=/etc/nixos/nixpkgs" ];
   \ under: nix = { };
@@ -69,4 +70,27 @@
         \ Guest Port: 22
     * ssh -v -p 8822 127.0.0.111 -l root
 
+* to mount vboxsf shares while booted from the iso
+  * vim /etc/nixos/configuration.nix
+    \ virtualisation.virtualbox.guest.enable = true;
+    \ wq! (because it's readonly!)
+  * time nixos-rebuild switch
+    \ takes like 10min
+  * now you must find 2 modules
+    \ eg. find /nix/store/ -iname vboxsf\*
+    \ should be: /nix/store/hashhere-kernel-modules-shrunk/lib/modules/4.4.8/misc/vboxsf.ko
+    * insmod $thatdir/vboxguest.ko
+    * insmod $thatdir/vboxsf.ko
+  * now you can mount
+    \ mount -t vboxsf vmsharedfolder /vmsh
 
+* fails:
+  * malformed database
+    \ error (ignored): finalizing statement: database disk image is malformed
+    \ error: error getting valid paths: database disk image is malformed
+    \
+    \ solution src: http://lists.science.uu.nl/pipermail/nix-dev/2015-June/017410.html
+    * backup /nix/var/nix/db/db.sqlite
+    * sqlite3 /nix/var/nix/db/db.sqlite 'pragma integrity_check'
+      \ well... sqlite3: command not found
+      \ and can't add any new packages because database malformed...

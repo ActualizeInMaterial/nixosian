@@ -272,6 +272,7 @@ skype
 #    spice
 #    spotify
 #    sqlite-interactive
+    sqlite3
 #    srecord
 #    stdmanpages
 #    subversion
@@ -600,7 +601,7 @@ nix = {
     gc-keep-derivations = true
     build-cores = 0  # 0 means auto-detect number of CPUs (and use all)
     auto-optimise-store = true
-    binary-caches-parallel-connections = 10
+    binary-caches-parallel-connections = 3
     '';
     #2nd src: https://github.com/avnik/nixos-configs/blob/master/common/nix.nix#L23
   #also see: http://anderspapitto.com/posts/2015-11-01-nixos-with-local-nixpkgs-checkout.html

@@ -1,0 +1,15 @@
+* after install
+  * broken icons in xfce
+    \ on both beta and stable 16.03
+  * shutdown won't work in xfce
+* minimal iso CD
+  * there's no gpm when started from minimal iso CD
+  * there's no virtualbox copy/paste when started from minimal iso CD
+  * can't get gpm started even with services.gpm.enable = true;
+    \ therefore copy/pasting is out of the question!
+* manual
+  * they are using '$' as prefix for commands regardless of whether they are to be ran as root or not! - this is a tell-tale sign of their mentality (beware of what to expect, or what to not expect)
+* outdated packages
+  * VBoxGuestAdditions
+    \ is 5.0.14 and I'm running 5.0.20 in gentoo! since a week ago!
+
