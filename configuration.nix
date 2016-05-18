@@ -16,7 +16,7 @@ hostname = vbox1; # select one from above
 
 #linux kernel version:
 #latest linux rc! thanks to: https://github.com/NixOS/nixpkgs/pull/15149#issuecomment-216111355
-linuxPackages = pkgs.linuxPackages_4_5;
+linuxPackages = pkgs.linuxPackages_4_6;
 #when pkgs.linuxPackages_testing, apparently it recompiles shiet every time!
 
 in  #from the above 'let'
@@ -56,7 +56,7 @@ in  #from the above 'let'
 # Define on which hard drive you want to install Grub.
 #  boot.loader.grub.device = "/dev/sda";
         device = if vbox1 == config.networking.hostName then
-          "/dev/disk/by-id/ata-VBOX_HARDDISK_VB58dce9b3-6eca935a"
+          "/dev/disk/by-id/ata-VBOX_HARDDISK_VB55e05b68-4672a416"
           else if myz575 == config.networking.hostName then 
             throw "grub device for myz575 not yet set!"
               else throw "Missing boot.loader.grub.device setting for hostname \"${config.networking.hostName}\"";
@@ -417,6 +417,7 @@ boot.blacklistedKernelModules = [
     enableExtensionPack = false; #we don't need/use this!
     pulseSupport = true;
   };
+#  virtualbox.enableExtensionPack = false; #already defined above
 };
 #boot.extraModulePackages = [ linuxPackages.lttng-modules ];  # fails on linux 3.18+
 

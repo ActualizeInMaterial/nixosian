@@ -1,56 +1,63 @@
-* cfdisk
-  * gpt
-  * swap xG where x is ammount of RAM * 3/2
-  * 1M Bios Boot (for grub, since this is gpt)
-  * rest for Linux
-* make filesystems
-  * mkswap -L myswap /dev/sda1
-  * mkfs.btrfs -L myroot /dev/sda3
-* mount filesystems
-  * swapon /dev/disk/by-label/myswap
-  * mount -o async,relatime,noauto,rw,suid,dev,exec,nouser,loud,ssd,autodefrag,compress-force=lzo,datasum,datacow,space_cache,commit=300,enospc_debug,discard /dev/disk/by-label/myroot /mnt
-* network is already set... (dhcp)
-  * set static? #TODO:
-* set configuration.nix
-  * nixos-generate-config --root /mnt
-  * mv /mnt/etc/nixos/configuration.nix /mnt/etc/nixos/configuration.nix.generated
-    \ as a backup
-  * to mount vboxsf shares while booted from the iso (in order to get your config into virtualbox!)
-    * you don't have vim yet, so:
-      \ time nix-env -i vim
-      \ takes: 24.5 sec
-    * vim /etc/nixos/configuration.nix
-      \ virtualisation.virtualbox.guest.enable = true;
-      \ #services.gpm.enable = true; #no effect!
-      \ #because we want to see if copy/paste is available! this doesn't start gpm.service and manually starting it via systemctl start gpm.service hangs!! #FIXME:!  after like 3min of hang, journalctl -xe  reports it was waiting for dev-input-mice.device which failed!
-      \ wq! (because it's readonly!)
-    * time nixos-rebuild switch
-      \ 12m54s (virtualbox)
-      \ 27m22s(virtualbox 4 cores KVM)
-    * now you must find 2 modules
-      \ eg. find /nix/store/ -iname vboxsf\* | grep shrunk
-      \ should be: /nix/store/hashhere-kernel-modules-shrunk/lib/modules/4.4.8/misc/vboxsf.ko
-      * cd $thatdir
-      * insmod vboxguest.ko ; insmod vboxsf.ko
-    * mkdir /vmsh
-    * now you can mount
-      \ mount -t vboxsf vmsharedfolder /vmsh
-  * cp /vmsh/configuration.nix /mnt/etc/nixos/
-  * cp /vmsh/prep /mnt/etc/nixos/
-  * cd /mnt/etc/nixos
-  * ./prep
-    \ this also git clones! because it does 'nix-env wget git' (internally)
-  * edit the hdd id for grub boot
-    * ls -la /dev/disk/by-id/
-      \ see the one with /dev/sda
-      \ put it in configuration.nix under /dev/disk/by-id/...
-  * setterm --powerdown 0 --blank 0 --powersave off
-    \ to prevent the term from getting black and then not seeing why/where it crashed!
-  * time NIX_PATH="nixpkgs=/mnt/etc/nixos/nixpkgs" nixos-install
-    \ //crashed virtualbox with guru meditation after a while!(without KVM in kernel)
-    \ gettext, binutils and anything from ftpmirror.gnu.org ... is slow max 190KB/sec
-    \ can't use the path without /mnt !
-  * sync
-  * umount /mnt
-  * sync
+* all
+  * cfdisk
+    * gpt
+    * swap xG where x is ammount of RAM * 3/2
+    * 1M Bios Boot (for grub, since this is gpt)
+    * rest for Linux
+  * make filesystems
+    * mkswap -L myswap /dev/sda1
+    * mkfs.btrfs -L myroot /dev/sda3
+  * mount filesystems
+    * swapon /dev/disk/by-label/myswap
+    * mount -o async,relatime,noauto,rw,suid,dev,exec,nouser,loud,ssd,autodefrag,compress-force=lzo,datasum,datacow,space_cache,commit=300,enospc_debug,discard /dev/disk/by-label/myroot /mnt
+  * network is already set... (dhcp)
+    * set static? #TODO:
+  * set configuration.nix
+    * nixos-generate-config --root /mnt
+    * mv /mnt/etc/nixos/configuration.nix /mnt/etc/nixos/configuration.nix.generated
+      \ as a backup
+    * to mount vboxsf shares while booted from the iso (in order to get your config into virtualbox!)
+      * you don't have vim yet, so:
+        \ time nix-env -i vim
+        \ takes: 24.5 sec
+      * vim /etc/nixos/configuration.nix
+        \ virtualisation.virtualbox.guest.enable = true;
+        \ #services.gpm.enable = true; #no effect!
+        \ #because we want to see if copy/paste is available! this doesn't start gpm.service and manually starting it via systemctl start gpm.service hangs!! #FIXME:!  after like 3min of hang, journalctl -xe  reports it was waiting for dev-input-mice.device which failed!
+        \ wq! (because it's readonly!)
+      * time nixos-rebuild switch
+        \ 12m54s (virtualbox)
+        \ 27m22s(virtualbox 4 cores KVM) a few days later
+        \ 24m17s
+      * now you must find 2 modules
+        * cd $(dirname `find /nix/store/ -iname vboxsf\* | grep shrunk`)
+        \ should be: /nix/store/hashhere-kernel-modules-shrunk/lib/modules/4.4.8/misc/vboxsf.ko
+        \ cd $thatdir
+        * insmod vboxguest.ko ; insmod vboxsf.ko
+      * mkdir /vmsh
+      * now you can mount
+        \ mount -t vboxsf vmsharedfolder /vmsh
+    * cp /vmsh/configuration.nix /mnt/etc/nixos/
+    * cp /vmsh/prep /mnt/etc/nixos/
+    * cd /mnt/etc/nixos
+    * ./prep
+      \ this also git clones the nixpkgs repo under nixpkgs folder! because it does 'nix-env wget git' (internally)
+      \ that reset it to 16.03 stable channel!
+      * cd nixpkgs
+      * git reset --hard origin/master
+        \ now it's just like newly cloned
+      * cd ..
+    * edit the hdd id for grub boot
+      * ls -la /dev/disk/by-id/
+        \ see the one with /dev/sda
+        \ put it in configuration.nix under /dev/disk/by-id/...
+    * setterm --powerdown 0 --blank 0 --powersave off
+      \ to prevent the term from getting black and then not seeing why/where it crashed!
+    * time NIX_PATH="nixpkgs=/mnt/etc/nixos/nixpkgs" nixos-install
+      \ //crashed virtualbox with guru meditation after a while!(without KVM in kernel)
+      \ gettext, binutils and anything from ftpmirror.gnu.org ... is slow max 190KB/sec
+      \ can't use the path without /mnt !
+    * sync
+    * umount /mnt
+    * sync
 
