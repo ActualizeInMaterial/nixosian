@@ -57,7 +57,11 @@
       \ //crashed virtualbox with guru meditation after a while!(without KVM in kernel)
       \ gettext, binutils and anything from ftpmirror.gnu.org ... is slow max 190KB/sec
       \ can't use the path without /mnt !
+      \ this will take ages! if you're using master like that
+      \ so, about 40 hours of continous compilation (4 cores KVM vbox!)
     * sync
     * umount /mnt
+      \ yes this works! (won't work in GuixSD though, as comparison!)
     * sync
+    * reboot
 

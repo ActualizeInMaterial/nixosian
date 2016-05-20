@@ -87,6 +87,16 @@ in  #from the above 'let'
         resolv_conf_options=' ndots:1 timeout:3 attempts:1 rotate '
         ''; #FIXME: the = overrides all prev. stuff(like the below dnsSingleRequest = true) due to += doubling shiet, as explained below:
 #        dnsSingleRequest = true; #FIXME: well, this gets doubled due to a resolvconf bug where only += is used and the var was never inited (via = )!  Anyway, I'm looking into Guix and GuixSD, so... hopefully I won't have to get back to this!
+
+        #TODO: for z575
+        #src: https://github.com/NixOS/nixpkgs/blob/7475728593a49f09c4b7b959b15513aee38ab4b4/nixos/doc/manual/configuration/ad-hoc-network-config.xml#L11
+        #this would be for t400(with that enp0s25 on guixsd at least):
+       #networking.localCommands =
+#  ''
+#    ip addr add 192.168.1.191/24 broadcast 192.168.1.255 dev enp0s25
+#    ip route add 0.0.0.0/0 via 192.168.1.1
+#    #echo 'nameserver 8.8.8.8' > /etc/resolv.conf
+#  '';
       };
 # Select internationalisation properties.
       i18n = {
@@ -199,6 +209,7 @@ in  #from the above 'let'
 #    lttng-tools
 #    lynx
           manpages # for "man 2 fork" etc.
+	  posix_man_pages
 #    meld
 #    mercurial
 #    minicom
@@ -392,6 +403,13 @@ boot.blacklistedKernelModules = [
 #led_class               5565  1 rtsx_usb_sdmmc
 #XXX: that is: led_class is used by rtsx_usb_sdmmc which is internal card reader of Z575 laptop
   "fglrx"
+
+
+#  "radeon"
+#  "fb"
+#  "fbcon" #FIXME: these 3 must not be blacklisted when z575!
+  "vboxvideo" #TODO: workaround for virtualbox to work (funnily enough)
+
 #blacklist radeon
 #fglrx
 #blacklist fb
@@ -457,7 +475,7 @@ boot.kernelParams = [
   "radeon.no_wb=1"
   "radeon.dynclks=0"
   "radeon.r4xx_atom=0"
-  "radeonfb"
+#  "radeonfb" #FIXME: set this for z575
   "radeon.fastfb=1"
   "radeon.dpm=1"
   "radeon.runpm=1"
@@ -511,7 +529,7 @@ boot.kernelParams = [
     synaptics.twoFingerScroll = true;
   } else {} // {
 enable = true;
-videoDrivers = [ "ati" "intel" "vesa" "modesetting" "virtualbox" ];
+videoDrivers = [ "ati" "intel" "vesa" "modesetting" "vbox" ];
 layout = "us, hu";
 xkbModel = "pc105";
 xkbOptions = "eurosign:e,terminate:ctrl_alt_bksp,numpad:microsoft,grp:alt_shift_toggle";
@@ -556,6 +574,7 @@ users.extraUsers = {
         "tty"
 #        "usbtmc"
         "vboxusers"
+"vboxsf"
         "video"
         "wheel"
         "wireshark"
@@ -591,7 +610,9 @@ nix = {
   readOnlyStore = true; #src: https://github.com/avnik/nixos-configs/blob/master/common/nix.nix
 #  readOnlyStore = false; #FIXME: undo this, was for testing if sudo updatedb works with this applied: https://github.com/NixOS/nixpkgs/pull/14686
   buildCores = 4;    # -j4 for subsequent make calls; XXX: is this same as 'build-cores' below in extraOptions?
-  #maxJobs = 2;       # Parallel nix builds
+  # make sure we have enough build users
+  nrBuildUsers = 30;
+  maxJobs = 4;       # Parallel nix builds
   gc.automatic = true;
   gc.dates = "03:15";#src: https://nixos.org/releases/nixos/14.12/nixos-14.12.374.61adf9e/manual/sec-nix-gc.html
 
@@ -603,6 +624,8 @@ nix = {
     build-cores = 0  # 0 means auto-detect number of CPUs (and use all)
     auto-optimise-store = true
     binary-caches-parallel-connections = 3
+    # if our hydra is down, don't wait forever
+    connect-timeout = 5 #src: https://github.com/snabblab/snabblab-nixos/blob/31a02c14a243f9e3c1364eecb7eeab485fd380f8/modules/common.nix#L50
     '';
     #2nd src: https://github.com/avnik/nixos-configs/blob/master/common/nix.nix#L23
   #also see: http://anderspapitto.com/posts/2015-11-01-nixos-with-local-nixpkgs-checkout.html
