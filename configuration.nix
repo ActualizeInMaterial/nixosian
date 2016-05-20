@@ -33,6 +33,7 @@ in  #from the above 'let'
     #vmsharedfolder on /media/sf_vmsharedfolder type vboxsf (rw,nodev,relatime)
     #vmsharedfolder on /vmsh type vboxsf (rw,nodev,relatime)
 
+    #FIXME: actuall this doesn't get mounted under 16.09.git.f8177f7M (Flounder) 16.09.git.f8177f7M (Flounder)
       fsType = "vboxsf";
       device = "vmsharedfolder";
       options = [ "rw" ];
@@ -63,6 +64,8 @@ in  #from the above 'let'
       };
 
       services.nixosManual.enable = true;
+
+#services.dbus.enable = true; #no effect on logout, still doesn't work
 
 
 #FIXME: vim indenting for .nix
@@ -543,6 +546,8 @@ displayManager.auto = {
 };
 };
 #services.xserver.displayManager.auto.enable = true;
+
+system.autoUpgrade.enable = false; #never auto upgrade! This enables a periodically executed systemd service named nixos-upgrade.service. It runs nixos-rebuild switch --upgrade to upgrade NixOS to the latest version in the current channel. (To see when the service runs, see systemctl list-timers.) src: https://nixos.org/nixos/manual/index.html#sec-upgrading
 
 # Enable the KDE Desktop Environment.
 # services.xserver.displayManager.kdm.enable = true;
