@@ -55,9 +55,9 @@ in  #from the above 'let'
 #  boot.loader.grub.version = 2;
         version = 2;
 # Define on which hard drive you want to install Grub.
-#  boot.loader.grub.device = "/dev/sda";
+#  boot.loader.grub.device = "/dev/sda"; #<- never use this!
         device = if vbox1 == config.networking.hostName then
-          "/dev/disk/by-id/ata-VBOX_HARDDISK_VB55e05b68-4672a416"
+          "/dev/disk/by-id/ata-VBOX_HARDDISK_VB20006cf1-5da8b354"
           else if myz575 == config.networking.hostName then 
             throw "grub device for myz575 not yet set!"
               else throw "Missing boot.loader.grub.device setting for hostname \"${config.networking.hostName}\"";
