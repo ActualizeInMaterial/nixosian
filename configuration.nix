@@ -16,8 +16,29 @@ hostname = vbox1; # select one from above
 
 #linux kernel version:
 #latest linux rc! thanks to: https://github.com/NixOS/nixpkgs/pull/15149#issuecomment-216111355
-linuxPackages = pkgs.linuxPackages_4_6;
+linuxPackages = #pkgs.linuxPackages_4_6;
 #when pkgs.linuxPackages_testing, apparently it recompiles shiet every time!
+pkgs.linuxPackages_custom {
+  version = "4.6.0-custom";
+  src = pkgs.fetchurl {
+    url = "mirror://kernel/linux/kernel/v4.x/linux-4.6.tar.xz";
+#    url = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.6.tar.xz"
+    sha256 = "0rnq4lnz1qsx86msd9pj5cx8v97yim9l14ifyac7gllabb6p2dx9";
+#XXX:sha256 to base32:  nix-hash --type sha256 --to-base32 a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866
+#XXX: base32 to sha256: nix-hash --type sha256 --to-base16 0rnq4lnz1qsx86msd9pj5cx8v97yim9l14ifyac7gllabb6p2dx9
+#4.6 = a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866
+  };
+  configfile = kernel/vbox1/illegalname.config;
+/*         kernelPatches = [ #can't use this here
+           {
+patch = patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch;
+name = "i8042 on kexec fix"; 
+}
+#           { patch = ../patches/override_for_missing_acs_capabilities.patch;
+#             name = "acs_overrides"; 
+#};
+         ];*/
+};
 
 in  #from the above 'let'
 {
@@ -124,6 +145,7 @@ in  #from the above 'let'
 # List packages installed in system profile. To search by name, run:
 # $ nix-env -qaP | grep wget
       environment.systemPackages = with pkgs; [
+colordiff
         vim
         x11vnc
         nix-repl
@@ -432,15 +454,45 @@ boot.blacklistedKernelModules = [
 
   #TODO: force latest (or manually set) virtual box (guest)modules for 5.0.20 (currently 5.0.14) because they won't compile with 4.6_rc6 otherwise
 
-  boot.kernelPackages = linuxPackages // {
+/*  boot.kernelPackages = 
+linuxPackages 
+// {
   virtualbox = linuxPackages.virtualbox.override {
     #enableExtensionPack = (myz575 == config.networking.hostName);
     enableExtensionPack = false; #we don't need/use this!
-    pulseSupport = true;
+    pulseSupport = true; #FIXME: add all these virtualbox stuff
   };
 #  virtualbox.enableExtensionPack = false; #already defined above
-};
+};*/
 #boot.extraModulePackages = [ linuxPackages.lttng-modules ];  # fails on linux 3.18+
+  boot.kernelPackages = let  #error: attribute ‘override’ missing  WTF!
+  kernel = (pkgs.linuxPackages_custom {
+  
+version = "4.6.0-custom";
+  src = pkgs.fetchurl {
+    url = "mirror://kernel/linux/kernel/v4.x/linux-4.6.tar.xz";
+#    url = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.6.tar.xz"
+    sha256 = "0rnq4lnz1qsx86msd9pj5cx8v97yim9l14ifyac7gllabb6p2dx9";
+#XXX:sha256 to base32:  nix-hash --type sha256 --to-base32 a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866
+#XXX: base32 to sha256: nix-hash --type sha256 --to-base16 0rnq4lnz1qsx86msd9pj5cx8v97yim9l14ifyac7gllabb6p2dx9
+#4.6 = a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866
+  };
+  configfile = kernel/vbox1/illegalname.config;
+
+		  }).kernel.override {
+	  kernelPatches = [
+	  {
+		  patch = patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch;
+		  name = "i8042 on kexec fix"; 
+	  }
+#           { patch = ../patches/override_for_missing_acs_capabilities.patch;
+#             name = "acs_overrides"; 
+#};
+	  ];
+  };
+packages = pkgs.linuxPackagesFor kernel packages;
+in packages;
+
 
 boot.consoleLogLevel = 9; #aka kernel cmdline: loglevel=9  (default 4)
 
@@ -688,6 +740,32 @@ nixpkgs.config = {
   packageOverrides = pkgs: {
 #qtcreator = pkgs.qtcreator.override { qt48 = pkgs.qt48Full; };
 #qemu = pkgs.qemu.override { spiceSupport = true; };
+/*  linux_4_6 = pkgs.linux_4_6.override { #doesn't syntax fail  but no effect on my current custom kernel! src: https://github.com/NixOS/nixpkgs/blob/3e387c3e005c87566b5403d24c86f71f4945a79b/pkgs/stdenv/generic/setup.sh#L817
+         kernelPatches = [
+           {
+patch = patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch;
+name = "i8042 on kexec fix"; 
+}
+#           { patch = ../patches/override_for_missing_acs_capabilities.patch;
+#             name = "acs_overrides"; 
+#};
+         ];
+ };*/
+/* no effect here
+     stdenv = pkgs.stdenv // {
+       platform = pkgs.stdenv.platform // {
+         kernelPatches = [
+           {
+patch = patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch;
+name = "i8042 on kexec fix"; 
+}
+#           { patch = ../patches/override_for_missing_acs_capabilities.patch;
+#             name = "acs_overrides"; 
+#};
+         ];
+       };
+     }; */
+#
   };
 
   config.replaceStdenv = { pkgs }: pkgs.ccacheStdenv;
@@ -697,6 +775,26 @@ nixpkgs.config = {
         export CCACHE_COMPRESS=0 CCACHE_NOCOMPRESS=1 CCACHE_COMPRESSLEVEL=0 CCACHE_BASEDIR=/tmp CCACHE_DIR=/ccache CCACHE_UMASK=0002 CCACHE_MAXSIZE=200G
         '';
     };
+#
+  packageOverrides = pkgs: {
+#qtcreator = pkgs.qtcreator.override { qt48 = pkgs.qt48Full; };
+#qemu = pkgs.qemu.override { spiceSupport = true; };
+/*     stdenv = pkgs.stdenv // { #no effect
+       platform = pkgs.stdenv.platform // {
+         kernelPatches = [
+           {
+patch = patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch;
+name = "i8042 on kexec fix"; 
+}
+#           { patch = ../patches/override_for_missing_acs_capabilities.patch;
+#             name = "acs_overrides"; 
+#};
+         ];
+       };
+     }; */
+#
+  };
+#
   };
 
 };

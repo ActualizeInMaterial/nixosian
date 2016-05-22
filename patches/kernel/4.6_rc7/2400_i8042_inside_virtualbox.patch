@@ -1,0 +1,34 @@
+prevent i8042: No controller found inside virtualbox
+when a key is being held down during boot/kexec
+
+https://bugzilla.kernel.org/show_bug.cgi?id=92881
+
+diff --git orig/drivers/input/serio/i8042.c patched/drivers/input/serio/i8042.c
+index 804d2e0..168f0ce 100644
+--- orig/drivers/input/serio/i8042.c
++++ patched/drivers/input/serio/i8042.c
+@@ -220,6 +220,11 @@ static int i8042_wait_write(void)
+ 	return -(i == I8042_CTL_TIMEOUT);
+ }
+ 
++#define udbg(format, arg...)							\
++	do {									\
++			printk(KERN_DEBUG KBUILD_MODNAME ": " format,	\
++			       ##arg);	\
++	} while (0)
+ /*
+  * i8042_flush() flushes all data that may be in the keyboard and mouse buffers
+  * of the i8042 down the toilet.
+@@ -235,10 +240,10 @@ static int i8042_flush(void)
+ 	spin_lock_irqsave(&i8042_lock, flags);
+ 
+ 	while ((str = i8042_read_status()) & I8042_STR_OBF) {
+-		if (count++ < I8042_BUFFER_SIZE) {
++		if (count++ < 66/*I8042_BUFFER_SIZE*/) { // https://bugzilla.kernel.org/show_bug.cgi?id=92881
+ 			udelay(50);
+ 			data = i8042_read_data();
+-			dbg("%02x <- i8042 (flush, %s)\n",
++			udbg("%02x <- i8042 (flush, %s)\n",
+ 			    data, str & I8042_STR_AUXDATA ? "aux" : "kbd");
+ 		} else {
+ 			retval = -EIO;
