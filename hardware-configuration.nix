@@ -11,14 +11,14 @@
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/515d45a0-9202-481e-8c99-9989ac607441";
+    { device = "/dev/disk/by-uuid/91b05b62-a31f-44e2-b37d-7530f638320c";
       fsType = "btrfs";
     };
 
   swapDevices =
-    [ { device = "/dev/disk/by-uuid/fe51100b-89e4-4166-86b8-9336a54fe292"; }
+    [ { device = "/dev/disk/by-uuid/9accee11-3e90-41bd-a146-eec9d5c337a9"; }
     ];
 
-  nix.maxJobs = lib.mkDefault 2;
+  nix.maxJobs = lib.mkDefault 3;
   virtualisation.virtualbox.guest.enable = true;
 }

@@ -20,7 +20,7 @@ git remote add channels https://github.com/nixos/nixpkgs-channels
 
 #these two must be run every time you want to update(refs too):
 git fetch --all
-git reset --hard channels/nixos-16.03
+git reset --hard channels/nixos-unstable
 
 #now manually do: time sudo nixos-rebuild switch
 #add: --fallback if using the git master branch instead of a channel! to build from sources!

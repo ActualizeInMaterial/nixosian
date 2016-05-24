@@ -29,10 +29,10 @@ pkgs.linuxPackages_custom {
 #4.6 = a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866
   };
   configfile = kernel/vbox1/illegalname.config;
-/*         kernelPatches = [ #can't use this here
+/*         kernelPatches = [ #can't use this here, FIXME: find a way to add kernel patches!
            {
-patch = patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch;
 name = "i8042 on kexec fix"; 
+patch = patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch;
 }
 #           { patch = ../patches/override_for_missing_acs_capabilities.patch;
 #             name = "acs_overrides"; 
@@ -454,18 +454,18 @@ boot.blacklistedKernelModules = [
 
   #TODO: force latest (or manually set) virtual box (guest)modules for 5.0.20 (currently 5.0.14) because they won't compile with 4.6_rc6 otherwise
 
-/*  boot.kernelPackages = 
+  boot.kernelPackages = 
 linuxPackages 
 // {
   virtualbox = linuxPackages.virtualbox.override {
     #enableExtensionPack = (myz575 == config.networking.hostName);
     enableExtensionPack = false; #we don't need/use this!
-    pulseSupport = true; #FIXME: add all these virtualbox stuff
+    pulseSupport = true; #FIXME: add all these virtualbox stuff (this whole block was commented out!)
   };
 #  virtualbox.enableExtensionPack = false; #already defined above
-};*/
+};
 #boot.extraModulePackages = [ linuxPackages.lttng-modules ];  # fails on linux 3.18+
-  boot.kernelPackages = let  #error: attribute ‘override’ missing  WTF!
+/*  boot.kernelPackages = let  #error: attribute ‘override’ missing  WTF!
   kernel = (pkgs.linuxPackages_custom {
   
 version = "4.6.0-custom";
@@ -492,7 +492,7 @@ version = "4.6.0-custom";
   };
 packages = pkgs.linuxPackagesFor kernel packages;
 in packages;
-
+*/
 
 boot.consoleLogLevel = 9; #aka kernel cmdline: loglevel=9  (default 4)
 
@@ -1014,5 +1014,18 @@ boot.tmpOnTmpfs = false;
   };
 }
 ];*/
+
+/*nixpkgs.config.packageOverrides = pkgs: with pkgs; rec {
+  linux_4_6 = makeOverridable (import
+         kernelPatches = [
+           {
+name = "i8042 on kexec fix"; 
+patch = patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch;
+}
+#           { patch = ../patches/override_for_missing_acs_capabilities.patch;
+#             name = "acs_overrides"; 
+#};
+         ];
+};*/
 
 }

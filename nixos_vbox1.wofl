@@ -1,6 +1,6 @@
 * all
   * virtualbox
-    * 2 CPUs
+    * 2 CPUs (or 3)
       \ because I'm unsure if 4 CPU is actually really slowing it down or just very very slightly faster
     * PAE/NX
     * KVM
@@ -33,11 +33,12 @@
     * nixos-generate-config --root /mnt
     * mv /mnt/etc/nixos/configuration.nix /mnt/etc/nixos/configuration.nix.generated
       \ as a backup
+    * get vim and mc
+      * time nix-env -i vim mc
+        \ vim takes: 24.5 sec
+        \ vim: 47.4s
+        \ mc takes: 58s
     * to mount vboxsf shares while booted from the iso (in order to get your config into virtualbox!)
-      * you don't have vim yet, so:
-        \ time nix-env -i vim
-        \ takes: 24.5 sec
-        \ 47.4s
       * vim /etc/nixos/configuration.nix
         \ virtualisation.virtualbox.guest.enable = true;
         \ #services.gpm.enable = true; #no effect!
@@ -48,6 +49,7 @@
         \ 27m22s(virtualbox 4 cores KVM) a few days later
         \ 24m17s(4cpus)
         \ 18m39s(2cpus)
+        \ 24m20s(3cpus)
       * now you must find 2 modules
         * cd $(dirname `find /nix/store/ -iname vboxsf\* | grep shrunk`)
         \ should be: /nix/store/hashhere-kernel-modules-shrunk/lib/modules/4.4.8/misc/vboxsf.ko
@@ -56,19 +58,20 @@
       * mkdir /vmsh
       * now you can mount
         \ mount -t vboxsf vmsharedfolder /vmsh
-    * cp /vmsh/configuration.nix /mnt/etc/nixos/
-    * cp /vmsh/prep /mnt/etc/nixos/
+    * cp -a /vmsh/configuration.nix /mnt/etc/nixos/
+    * cp -a /vmsh/prep /mnt/etc/nixos/
     * cd /mnt/etc/nixos
     * ./prep
       \ this also git clones the nixpkgs repo under nixpkgs folder! because it does 'nix-env wget git' (internally)
       \ that reset it to 16.03 stable channel!
-      * cd nixpkgs
-      - git reset --hard origin/master
-        \ now it's just like newly cloned
-        \ this takes 2 days to compile! avoid using master!
-      * git reset --hard channels/nixos-16.03
-        \ stable!
-      * cd ..
+      - prep already does this:
+        * cd nixpkgs
+        - git reset --hard origin/master
+          \ now it's just like newly cloned
+          \ this takes 2 days to compile! avoid using master!
+        * git reset --hard channels/nixos-16.03
+          \ stable!
+        * cd ..
     * edit the hdd id for grub boot
       * ls -la /dev/disk/by-id/
         \ see the one with /dev/sda
@@ -84,15 +87,17 @@
       \ so, about 40 hours of continous compilation (4 cores KVM vbox!) for master branch!
       \ NOTE: for the ignored error 'Curl error 77' see: https://github.com/NixOS/nixpkgs/pull/15579#issuecomment-220638757 we're already using workaround with SSL_CERT_FILE above
       \ time: 25m until fail(newer kernel for old vbox 5.0.12), for channel/nixos-16.03 (21 may 2016) - depends on download speed!
-      \ using --option binary-caches-parallel-connections 3  because to avoid this: https://github.com/NixOS/nixpkgs/issues/14874#issuecomment-220774656
+      \ using --option binary-caches-parallel-connections 3  because to avoid this: https://github.com/NixOS/nixpkgs/issues/14874#issuecomment-220774656   NO EFFECT!!!!! that 'still waiting for ... after 5 seconds' still happens!!! JFC!
       * cd /etc/nixos/nixpkgs
       * git fetch --all
+        \ to at least update the channels/!
       * git reset --hard channels/nixos-unstable
       - git cherry-pick 4f5e4ad69 fde921578a -n
         \ to update virtualbox from 5.0.14 to 5.0.20 else it won't compile with kernel 4.5/4.6
         \ it's already in!!!
       * now do the above nixos-install command! again
         \ time: 18m1s + 11m12s
+        \ (3cores) 24min + 22min
     * sync
     * umount /mnt
       \ yes this works! (won't work in GuixSD though, as comparison!)
