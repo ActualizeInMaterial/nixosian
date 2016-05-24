@@ -1,0 +1,76 @@
+* all
+  \ has 1 core celeron cpu 2.8Ghz
+  * wipe mbr with dd here
+    * wipe whole disk with dd here!
+      \ time dd if=/dev/urandom of=/dev/sda bs=512 skip=1
+      \ hmm time blkdiscard -zv /dev/sda
+      \ 28m43s
+      \ apparently works without cpu usage! and cannot be killed via -9
+      \ also BLKSECDISCARD and BLKDISCARD are not supported by this HDD(it's not a SSD)
+  * cfdisk
+    \ nothing needs to be set bootable!
+    * gpt
+    * swap xG where x is ammount of RAM * 3/2
+      \ that is 3G
+    * 1M Bios Boot (for grub, since this is gpt)
+    * rest(73.3G) for Linux
+  * make filesystems
+    * mkswap -L myswap /dev/sda1
+    * mkfs.btrfs -L myroot /dev/sda3
+  * mount filesystems
+    * swapon /dev/disk/by-label/myswap
+    * mount -o async,relatime,noauto,rw,suid,dev,exec,nouser,loud,ssd,autodefrag,compress-force=lzo,datasum,datacow,space_cache,commit=300,enospc_debug,discard /dev/disk/by-label/myroot /mnt
+  * network is already set... (dhcp)
+    * set static? #TODO:
+    * DNS server might be wrong!
+      * echo 'nameserver 8.8.8.8' >/etc/resolv.conf
+    * test internet works
+      * ping 8.8.8.8
+      * ping google.com
+  * set configuration.nix
+    * nixos-generate-config --root /mnt
+    * mv /mnt/etc/nixos/configuration.nix /mnt/etc/nixos/configuration.nix.generated
+      \ as a backup
+    * get vim and mc
+      * time nix-env -i vim mc
+        \ 58s
+        \ max mem used(looking at top): 535MiB
+    * copy stuff from usbstick
+      * mkdir here
+        \ that is: ~/here
+      * mount /dev/sdb1 here
+    * alias cp='cp -i'
+    * cp -a here/configuration.nix /mnt/etc/nixos/
+    * cp -a here/prep /mnt/etc/nixos/
+    * cd /mnt/etc/nixos
+    * time ./prep
+      \ this also git clones the nixpkgs repo under nixpkgs folder! because it does 'nix-env wget git' (internally)
+      \ that reset it to 16.03 stable channel!
+      - prep already does this:
+        * cd nixpkgs
+        - git reset --hard origin/master
+          \ now it's just like newly cloned
+          \ this takes 2 days to compile! avoid using master!
+        * git reset --hard channels/nixos-16.03
+          \ stable!
+        * cd ..
+    * edit the hdd id for grub boot
+      * ls -la /dev/disk/by-id/
+        \ see the one with /dev/sda
+        \ put it in configuration.nix under /dev/disk/by-id/...
+      * vim /mnt/etc/nixos/configuration.nix
+    * setterm --powerdown 0 --blank 0 --powersave off
+      \ to prevent the term from getting black and then not seeing why/where it crashed!
+    * time NIX_PATH="nixpkgs=/mnt/etc/nixos/nixpkgs" SSL_CERT_FILE="/etc/ssl/certs/ca-bundle.crt" nixos-install --option binary-caches-parallel-connections 3
+      \ 26m41s
+      \ can't use the path without /mnt ! and can't use nixos-install without setting NIX_PATH because it ignores the nixPath setting in the configuration.nix for wtw reason!
+      \ NOTE: for the ignored error 'Curl error 77' see: https://github.com/NixOS/nixpkgs/pull/15579#issuecomment-220638757 we're already using workaround with SSL_CERT_FILE above
+      \ using --option binary-caches-parallel-connections 3  because to avoid this: https://github.com/NixOS/nixpkgs/issues/14874#issuecomment-220774656   NO EFFECT!!!!! that 'still waiting for ... after 5 seconds' still happens!!! JFC!
+    * sync
+    * umount /mnt
+      \ yes this works! (won't work in GuixSD though, as comparison!)
+    * sync
+    * reboot
+    * remove CD and enter BIOS to set it to boot from HDD.
+      \ FIXME: perhaps if we set any partition as bootable, it won't boot from CD?
+
