@@ -454,6 +454,27 @@ boot.blacklistedKernelModules = [
 
   #TODO: force latest (or manually set) virtual box (guest)modules for 5.0.20 (currently 5.0.14) because they won't compile with 4.6_rc6 otherwise
 
+/*nixpkgs.config.packageOverrides = pkgs: rec {
+  boot.kernelPackages = pkgs.linuxPackages_custom.overrideDerivation
+(oldAttr: {
+  version = "4.6.0-custom";
+  src = pkgs.fetchurl {
+    url = "mirror://kernel/linux/kernel/v4.x/linux-4.6.tar.xz";
+#    url = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.6.tar.xz"
+    sha256 = "0rnq4lnz1qsx86msd9pj5cx8v97yim9l14ifyac7gllabb6p2dx9";
+#XXX:sha256 to base32:  nix-hash --type sha256 --to-base32 a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866
+#XXX: base32 to sha256: nix-hash --type sha256 --to-base16 0rnq4lnz1qsx86msd9pj5cx8v97yim9l14ifyac7gllabb6p2dx9
+#4.6 = a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866
+  };
+  configfile = kernel/vbox1/illegalname.config;
+	  patches = [
+		  patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch
+	  ];
+
+});
+
+};*/
+
   boot.kernelPackages = 
 linuxPackages 
 // {
@@ -767,6 +788,56 @@ name = "i8042 on kexec fix";
      }; */
 #
   };
+
+  /* no effect!
+  packageOverrides = pkgs: rec {
+    boot.kernelPackages = pkgs.linuxPackages_custom.overrideDerivation
+(oldAttr: { #no effect!
+/*  version = "4.6.0-custom";
+  src = pkgs.fetchurl {
+    url = "mirror://kernel/linux/kernel/v4.x/linux-4.6.tar.xz";
+#    url = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.6.tar.xz"
+    sha256 = "0rnq4lnz1qsx86msd9pj5cx8v97yim9l14ifyac7gllabb6p2dx9";
+#XXX:sha256 to base32:  nix-hash --type sha256 --to-base32 a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866
+#XXX: base32 to sha256: nix-hash --type sha256 --to-base16 0rnq4lnz1qsx86msd9pj5cx8v97yim9l14ifyac7gllabb6p2dx9
+#4.6 = a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866
+  };
+  configfile = kernel/vbox1/illegalname.config;*/
+	  patches = [
+		  patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch
+	  ];
+
+});
+
+#qtcreator = pkgs.qtcreator.override { qt48 = pkgs.qt48Full; };
+#qemu = pkgs.qemu.override { spiceSupport = true; };
+/*  linux_4_6 = pkgs.linux_4_6.override { #doesn't syntax fail  but no effect on my current custom kernel! src: https://github.com/NixOS/nixpkgs/blob/3e387c3e005c87566b5403d24c86f71f4945a79b/pkgs/stdenv/generic/setup.sh#L817
+         kernelPatches = [
+           {
+patch = patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch;
+name = "i8042 on kexec fix"; 
+}
+#           { patch = ../patches/override_for_missing_acs_capabilities.patch;
+#             name = "acs_overrides"; 
+#};
+         ];
+ };*/
+/* no effect here
+     stdenv = pkgs.stdenv // {
+       platform = pkgs.stdenv.platform // {
+         kernelPatches = [
+           {
+patch = patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch;
+name = "i8042 on kexec fix"; 
+}
+#           { patch = ../patches/override_for_missing_acs_capabilities.patch;
+#             name = "acs_overrides"; 
+#};
+         ];
+       };
+     }; */
+#
+  }; */
 
   config.replaceStdenv = { pkgs }: pkgs.ccacheStdenv;
   config.packageOverrides = pkgs: {
