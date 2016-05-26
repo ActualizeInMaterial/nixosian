@@ -19,11 +19,14 @@
     * mkfs.btrfs -L myroot /dev/sda3
   * mount filesystems
     * swapon /dev/disk/by-label/myswap
-    * mount -o async,relatime,noauto,rw,suid,dev,exec,nouser,loud,ssd,autodefrag,compress-force=lzo,datasum,datacow,space_cache,commit=300,enospc_debug,discard /dev/disk/by-label/myroot /mnt
+    * mount -o async,relatime,rw,suid,dev,exec,autodefrag,compress-force=lzo,datasum,datacow,space_cache,commit=300,enospc_debug /dev/disk/by-label/myroot /mnt
+      \ nouser is unrecognized!
+      \ #ONREBOOT (cmds tagged here are what you have to run if you reboot from a failed installation!)
   * network is already set... (dhcp)
     * set static? #TODO:
     * DNS server might be wrong!
       * echo 'nameserver 8.8.8.8' >/etc/resolv.conf
+        \ #ONREBOOT
     * test internet works
       * ping 8.8.8.8
       * ping google.com
@@ -63,6 +66,7 @@
       \ to prevent the term from getting black and then not seeing why/where it crashed!
     * time NIX_PATH="nixpkgs=/mnt/etc/nixos/nixpkgs" SSL_CERT_FILE="/etc/ssl/certs/ca-bundle.crt" nixos-install --option binary-caches-parallel-connections 3
       \ 26m41s
+      \ #ONREBOOT
       \ can't use the path without /mnt ! and can't use nixos-install without setting NIX_PATH because it ignores the nixPath setting in the configuration.nix for wtw reason!
       \ NOTE: for the ignored error 'Curl error 77' see: https://github.com/NixOS/nixpkgs/pull/15579#issuecomment-220638757 we're already using workaround with SSL_CERT_FILE above
       \ using --option binary-caches-parallel-connections 3  because to avoid this: https://github.com/NixOS/nixpkgs/issues/14874#issuecomment-220774656   NO EFFECT!!!!! that 'still waiting for ... after 5 seconds' still happens!!! JFC!

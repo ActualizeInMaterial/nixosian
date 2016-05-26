@@ -10,7 +10,8 @@ let
 vbox1 = "vbox1";
 myz575 = "myzee";
 myt400 = "myty";
-hostname = vbox1; # select one from above
+atelier = "atelier";
+hostname = atelier; # select one from above
 
 #  myDomain = "idno.name"; # src: https://github.com/bjornfor/nixos-config/blob/master/configuration.nix
 
@@ -28,7 +29,21 @@ pkgs.linuxPackages_custom {
 #XXX: base32 to sha256: nix-hash --type sha256 --to-base16 0rnq4lnz1qsx86msd9pj5cx8v97yim9l14ifyac7gllabb6p2dx9
 #4.6 = a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866
   };
-  configfile = kernel/vbox1/illegalname.config;
+#XXX: these aren't syntax ok:
+#  configfile = ./kernel/${config.networking.hostName}/illegalname.config;
+#  configfile = ./kernel/"${config.networking.hostName}"/illegalname.config;
+#  configfile = kernel/"${config.networking.hostName}"/illegalname.config;
+#  configfile = kernel/${config.networking.hostName}/illegalname.config;
+#  configfile = kernel/optionalString true "${config.networking.hostName}"/illegalname.config;
+#  configfile = kernel/(optionalString true "${config.networking.hostName}")/illegalname.config;
+#XXX: this doesn't do what it seems it should be doing:
+#  configfile = "./kernel/${config.networking.hostName}/illegalname.config";
+#  configfile = kernel/config.networking.hostName/illegalname.config;
+#  configfile = "/etc/nixos/kernel/${config.networking.hostName}/illegalname.config"; #still can't find the file! and rx attributes are for all in hierarchy!
+#FIXME: ^ replace /etc/nixos/ with a variable! or better yet: make this a relative path!
+#  configfile = "/etc/nixos/kernel/atelier/illegalname.config"; #still can't find the file! and rx attributes are for all in hierarchy!
+#XXX: this just works:
+  configfile = kernel/atelier/illegalname.config;
 /*         kernelPatches = [ #can't use this here, FIXME: find a way to add kernel patches!
            {
 name = "i8042 on kexec fix"; 
@@ -61,6 +76,17 @@ in  #from the above 'let'
     }; #src: https://nixos.org/wiki/Installing_NixOS_in_a_VirtualBox_guest#Shared_Folders
   } else if myz575 == config.networking.hostName then 
     throw "not set for myz575"
+  else if atelier == config.networking.hostName then
+{ 
+"/" = {
+ fsType = "btrfs";
+# device = "/dev/disk/by-label/myroot";#too ambiguous
+ device = "/dev/disk/by-uuid/f5160794-3804-4e32-8c36-7c66c30758dd"; #from hardware-configuration.nix
+ options = [ "async,relatime,rw,suid,dev,exec,autodefrag,compress-force=lzo,datasum,datacow,space_cache,commit=300,enospc_debug" ];
+#XXX: don't add 'nouser' => won't boot due to unrecognized option!
+#XXX: ignoring "noauto" for root device
+};
+}
   else throw "Missing fileSystems settings for hostname \"${config.networking.hostName}\"";
   
 
@@ -78,9 +104,11 @@ in  #from the above 'let'
 # Define on which hard drive you want to install Grub.
 #  boot.loader.grub.device = "/dev/sda"; #<- never use this!
         device = if vbox1 == config.networking.hostName then
-          "/dev/disk/by-id/ata-VBOX_HARDDISK_VB20006cf1-5da8b354"
+          "/dev/disk/by-id/ata-somethingsomething"
           else if myz575 == config.networking.hostName then 
             throw "grub device for myz575 not yet set!"
+else if atelier == config.networking.hostName then 
+          "/dev/disk/by-id/ata-Maxtor_6Y080P0_Y262PZ6C"
               else throw "Missing boot.loader.grub.device setting for hostname \"${config.networking.hostName}\"";
       };
 
@@ -96,17 +124,24 @@ in  #from the above 'let'
       networking = {
         hostName = hostname; #XXX: if never set inhere, defaults to 'nixos'
         firewall.enable = true;
-        firewall.allowPing = false; #ipv6 ping is always allowed, src: https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html#sec-firewall
+        firewall.allowPing = true; #Note however that ipv6 ping is always allowed, src: https://nixos.org/releases/nixos/unstable/nixos-16.09pre79453.32b7b00/manual/index.html#sec-firewall
         enableWLAN = false;
         enableIPv6 = false;
         useDHCP = vbox1 == config.networking.hostName;
+      
+#FIXME:        interfaces.${if atelier == config.networking.hostName then enp1s5 else if ohomedesk == config.networking.hostName then throw "unset eth0 searchforme" else throw "unset eth0 for ${config.networking.hostName" }.ip4 = [ {
+interfaces.enp1s5.ip4 = [ {
+  address="192.168.1.160";
+  prefixLength = 24;
+} ];
+        defaultGateway = "192.168.1.1";
+        nameservers = [ "8.8.8.8" "8.8.4.4" ];
 
         networkmanager.enable = false;
         wireless.enable = false;
         #XXX: Note: networking.networkmanager and networking.wireless can not be enabled at the same time: you can still connect to the wireless networks using NetworkManager. src: https://nixos.org/nixos/manual/index.html#sec-installation
         wicd.enable = false; #src: https://github.com/manpages/dotfiles/blob/ac402986172c9a4842d067316979cc23a2a187ea/nixos/xserver/wicd.nix
         dhcpcd.extraConfig = "nohook resolv.conf"; #dhcpcd's configuration file may be edited to prevent the dhcpcd daemon from overwriting /etc/resolv.conf. To do this, add the following to the last section of /etc/dhcpcd.conf:  src: https://wiki.archlinux.org/index.php/resolv.conf#Modify_the_dhcpcd_config
-        nameservers = [ "8.8.8.8" "8.8.4.4" ];
         extraResolvconfConf = ''
         resolv_conf_options=' ndots:1 timeout:3 attempts:1 rotate '
         ''; #FIXME: the = overrides all prev. stuff(like the below dnsSingleRequest = true) due to += doubling shiet, as explained below:
@@ -147,6 +182,8 @@ in  #from the above 'let'
       environment.systemPackages = with pkgs; [
 colordiff
         vim
+chromium
+firefox
         x11vnc
         nix-repl
           mc
@@ -414,12 +451,17 @@ taskwarrior  # causes grep help text to be printed each time a new terminal is s
 
 # This fixes the touchpad resolution and 2-finger scroll on my Asus UL30A
 # laptop (and it doesn't hurt my desktop settings)
-#  boot.kernelModules = [ "psmouse" ];
+#FIXME: only for 'atelier':
+  boot.kernelModules = [ "psmouse" ];
 #  boot.extraModprobeConfig = " options psmouse proto=imps ";
+  boot.extraModprobeConfig = " options psmouse proto=bare resetafter=0 resync_time=0";
+#  boot.extraModprobeConfig = " options psmouse proto=any "; #with this, no more spam about PS/2 IMPS on dmesg! but still doesn't work!
+
 boot.blacklistedKernelModules = [
 # This module is for debugging and generates gigantic amounts
 # of log output, so it should never be loaded automatically.
   "evbug"
+
   "ideapad_laptop"
   "thinkpad_acpi"
   "nvram"
@@ -433,7 +475,9 @@ boot.blacklistedKernelModules = [
 #  "radeon"
 #  "fb"
 #  "fbcon" #FIXME: these 3 must not be blacklisted when z575!
-  "vboxvideo" #TODO: workaround for virtualbox to work (funnily enough)
+#(pkgs.stdenv.lib.optionalString (vbox1 == config.networking.hostName) "vboxvideo") #this returns an empty "" string on 'else' !!
+#(if (vbox1 == config.networking.hostName) then "vboxvideo")
+#TODO: ^ workaround for virtualbox to work (funnily enough) XXX: question: can ${} be replaced by () here? or even missing altogether? - ok can't use ${} here!
 
 #blacklist radeon
 #fglrx
@@ -450,7 +494,8 @@ boot.blacklistedKernelModules = [
   "uvcvideo"
   "bluetooth"
 
-  ];
+  ] ++  pkgs.stdenv.lib.optional (vbox1 == config.networking.hostName)  "vboxvideo"
+;
 
   #TODO: force latest (or manually set) virtual box (guest)modules for 5.0.20 (currently 5.0.14) because they won't compile with 4.6_rc6 otherwise
 
@@ -531,13 +576,18 @@ boot.kernelParams = [
   "memory_corruption_check=1"
   "nohz=on"
   "rcu_nocbs=1-3"
-  "pcie_aspm=force"
   "fbcon=scrollback:4096k"
   "fbcon=font:ProFont6x11"
   "apic=debug"
   "dynamic_debug.verbose=1"
   "dyndbg=\"file arch/x86/kernel/apic/* +pflmt ; file drivers/video/* +pflmt ; file drivers/input/* -pflmt ; file drivers/acpi/* -pflmt\""
   "acpi_backlight=vendor"
+
+#(pkgs.stdenv.lib.optionalString (atelier == config.networking.hostName) "i8042.nopnp") #this makes no mention of PS/2 or imps on dmesg anymore!
+#"i8042.nomux i8042.debug"
+
+(if myz575 == config.networking.hostName then
+  "pcie_aspm=force"
   "radeon.audio=0"
   "radeon.lockup_timeout=999000"
   "radeon.test=0"
@@ -555,6 +605,13 @@ boot.kernelParams = [
   "radeon.fastfb=1"
   "radeon.dpm=1"
   "radeon.runpm=1"
+  "radeon.modeset=1"
+#radeon.modeset=1 allows X to start into gfx mode but consoles (vts) are also graphical (framebuffer like) from the start.
+  "CPUunderclocking"
+else
+""
+)
+
   "rd.debug"
   "rd.udev.debug"
   "rd.memdebug=3"
@@ -566,10 +623,7 @@ boot.kernelParams = [
 #    "dobtrfs"
   "console=tty1"
   "earlyprintk=vga"
-  "CPUunderclocking"
-  "radeon.modeset=1"
 #console=tty1,ttyS0,115200n8 earlyprintk=vga,serial,ttyS0,115200,keep"
-#radeon.modeset=1 allows X to start into gfx mode but consoles (vts) are also graphical (framebuffer like) from the start.
 
   ];
 
@@ -582,13 +636,13 @@ boot.kernelParams = [
   services.dnsmasq.enable = false;
 # Enable the OpenSSH daemon.
 
-  services.openssh.enable = vbox1 == config.networking.hostName;
+  services.openssh.enable = myz575 != config.networking.hostName;
   #services.sshd.enable = false; #conflicting definitions when using this 'alias' with the above, and it's different value!
 
 # Enable CUPS to print documents.
   services.printing.enable = false;
 
-  services.gpm.enable = false;
+  services.gpm.enable = true;
 
 #src: https://web.archive.org/web/20140704130237/https://nixos.org/repos/nix/configurations/trunk/misc/eelco/hobbit.nix
   fonts.enableGhostscriptFonts = false; #XXX: .exe ?
@@ -605,8 +659,11 @@ boot.kernelParams = [
     synaptics.twoFingerScroll = true;
   } else {} // {
 enable = true;
-videoDrivers = [ "ati" "intel" "vesa" "modesetting" "vbox" ];
-layout = "us, hu";
+videoDrivers = [ "ati" "intel" "vesa" "modesetting" 
+(pkgs.stdenv.lib.optionalString (vbox1 == config.networking.hostName) "vbox")
+#FIXME: ^ should be vboxvideo but I forgot to change it back!
+];
+layout = "us, ro, hu"; #TODO: make these conditional
 xkbModel = "pc105";
 xkbOptions = "eurosign:e,terminate:ctrl_alt_bksp,numpad:microsoft,grp:alt_shift_toggle";
 #xkbDisable = false; doesn't exist
@@ -669,6 +726,8 @@ users.extraUsers = {
     { startGid = 100000; count = 65536; }
     ];
 
+    openssh.authorizedKeys.keys =
+[ "AAAAC3NzaC1lZDI1NTE5AAAAIM3zRMDmowQiH8iLmE9Fv4w5g8XX71qYfF6pWChGRQKa" ];
   };
 };
 
@@ -687,10 +746,12 @@ nix = {
   useChroot = true;
   readOnlyStore = true; #src: https://github.com/avnik/nixos-configs/blob/master/common/nix.nix
 #  readOnlyStore = false; #FIXME: undo this, was for testing if sudo updatedb works with this applied: https://github.com/NixOS/nixpkgs/pull/14686
-  buildCores = 4;    # -j4 for subsequent make calls; XXX: is this same as 'build-cores' below in extraOptions?
+
+#FIXME: have this set to, depending on hostname!
+  buildCores = 1;    # -j4 for subsequent make calls; XXX: is this same as 'build-cores' below in extraOptions?
   # make sure we have enough build users
   nrBuildUsers = 30;
-  maxJobs = 4;       # Parallel nix builds
+#  maxJobs = 4;       # Parallel nix builds - don't override this, because hardware-configuration.nix has it defined properly!
   gc.automatic = true;
   gc.dates = "03:15";#src: https://nixos.org/releases/nixos/14.12/nixos-14.12.374.61adf9e/manual/sec-nix-gc.html
 
@@ -709,7 +770,7 @@ nix = {
   #also see: http://anderspapitto.com/posts/2015-11-01-nixos-with-local-nixpkgs-checkout.html
   nixPath = [
     "nixpkgs=/etc/nixos/nixpkgs" #XXX: this is a 'sudo git clone https://github.com/NixOS/nixpkgs.git' then 'sudo git remote add channels https://github.com/nixos/nixpkgs-channels' then 'sudo git fetch --all' then 'git reset --hard channels/nixos-unstable' if I want to use the binaries and compile less, or use latest git and compile more via 'sudo git reset --hard origin/master' and then 'time sudo nixos-rebuild switch --fallback' (--fallback to compile from sources, they say) - so, now the question is: do I need to add --update near --fallback or not?! apparently not, but also this is the equivalent cmd: nixos-rebuild switch --option build-fallback true  src: https://github.com/NixOS/nix/issues/807#issuecomment-209895935
-#      "nixos=/etc/nixpkgs/nixos" #dno what this is!
+#      "nixos=/etc/nixpkgs/nixos" #dno what this is!but the path is off
       "nixos-config=/etc/nixos/configuration.nix"
 #      "private=/home/avn/nixos/private"
   ];
@@ -793,7 +854,7 @@ name = "i8042 on kexec fix";
   packageOverrides = pkgs: rec {
     boot.kernelPackages = pkgs.linuxPackages_custom.overrideDerivation
 (oldAttr: { #no effect!
-/*  version = "4.6.0-custom";
+  version = "4.6.0-custom";
   src = pkgs.fetchurl {
     url = "mirror://kernel/linux/kernel/v4.x/linux-4.6.tar.xz";
 #    url = "https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.6.tar.xz"
@@ -802,12 +863,12 @@ name = "i8042 on kexec fix";
 #XXX: base32 to sha256: nix-hash --type sha256 --to-base16 0rnq4lnz1qsx86msd9pj5cx8v97yim9l14ifyac7gllabb6p2dx9
 #4.6 = a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866
   };
-  configfile = kernel/vbox1/illegalname.config;*/
+  configfile = kernel/vbox1/illegalname.config;
 	  patches = [
 		  patches/kernel/4.6_rc7/2400_i8042_inside_virtualbox.patch
 	  ];
 
-});
+});*/
 
 #qtcreator = pkgs.qtcreator.override { qt48 = pkgs.qt48Full; };
 #qemu = pkgs.qemu.override { spiceSupport = true; };
@@ -837,8 +898,9 @@ name = "i8042 on kexec fix";
        };
      }; */
 #
-  }; */
+#  }; 
 
+/* I think this has no effect:
   config.replaceStdenv = { pkgs }: pkgs.ccacheStdenv;
   config.packageOverrides = pkgs: {
     ccacheWrapper = pkgs.ccacheWrapper.override {
@@ -846,11 +908,12 @@ name = "i8042 on kexec fix";
         export CCACHE_COMPRESS=0 CCACHE_NOCOMPRESS=1 CCACHE_COMPRESSLEVEL=0 CCACHE_BASEDIR=/tmp CCACHE_DIR=/ccache CCACHE_UMASK=0002 CCACHE_MAXSIZE=200G
         '';
     };
+*/
 #
-  packageOverrides = pkgs: {
+/*  packageOverrides = pkgs: {
 #qtcreator = pkgs.qtcreator.override { qt48 = pkgs.qt48Full; };
 #qemu = pkgs.qemu.override { spiceSupport = true; };
-/*     stdenv = pkgs.stdenv // { #no effect
+     stdenv = pkgs.stdenv // { #no effect
        platform = pkgs.stdenv.platform // {
          kernelPatches = [
            {
@@ -862,11 +925,11 @@ name = "i8042 on kexec fix";
 #};
          ];
        };
-     }; */
+     }; 
 #
-  };
+  };*/
 #
-  };
+#  };
 
 };
 
@@ -1037,7 +1100,7 @@ fi
 fi
 __red="1;31m"
 #echo '3' 2>&1
-PS1='\n$(ret=$?; test $ret -ne 0 && printf "\[\e[$__red\]$ret\[\e[0m\] ")\[\e[$__prompt_color\]\u@\[\e[$__hostnamecolor\]\h \[\e[$__prompt_color\]\w$(__git_ps1 " [git:%s]")\[\e[0m\]\n$ '
+PS1='\n\$(ret=$?; test $ret -ne 0 && printf "\[\e[$__red\]$ret\[\e[0m\] ")\[\e[$__prompt_color\]\u@\[\e[$__hostnamecolor\]\h \[\e[$__prompt_color\]\w$(__git_ps1 " [git:%s]")\[\e[0m\]\n$ '
 #echo '4' 2>&1 #FIXME: that grep error is beyond this, lookslike
 '';
 
@@ -1045,7 +1108,7 @@ PS1='\n$(ret=$?; test $ret -ne 0 && printf "\[\e[$__red\]$ret\[\e[0m\] ")\[\e[$_
 
 programs.bash.enableCompletion = true;
 
-virtualisation.virtualbox.host.enable = (config.networking.hostName != vbox1);
+virtualisation.virtualbox.host.enable = (config.networking.hostName != vbox1 && config.networking.hostName != atelier);
 virtualisation.virtualbox.host.enableHardening = true;
 
 
