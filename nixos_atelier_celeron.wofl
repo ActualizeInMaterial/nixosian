@@ -78,3 +78,7 @@
     * remove CD and enter BIOS to set it to boot from HDD.
       \ FIXME: perhaps if we set any partition as bootable, it won't boot from CD?
 
+
+* fml fail using custom 4.6.0 kernel
+  \ http://pastebin.com/raw/rMkjnurF
+  \ compilation also took 510mins, with 1 maxJobs and all that see atelier/configuration.nix

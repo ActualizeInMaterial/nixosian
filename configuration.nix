@@ -44,6 +44,9 @@ pkgs.linuxPackages_custom {
 #  configfile = "/etc/nixos/kernel/atelier/illegalname.config"; #still can't find the file! and rx attributes are for all in hierarchy!
 #XXX: this just works:
   configfile = kernel/atelier/illegalname.config;
+  #^ that works but later on you see: grep: Invalid range end
+  #and it continues with kernel compiling until apparently is done(49mins(i had to interrupt it now, so add to that an extra(since nothing got cached): xxxmins) later) and then it just stops for no apparent error(other than that grep above):
+  #
 /*         kernelPatches = [ #can't use this here, FIXME: find a way to add kernel patches!
            {
 name = "i8042 on kexec fix"; 
