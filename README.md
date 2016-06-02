@@ -1,6 +1,5 @@
 # My /etc/nixos/configuration.nix for NixOS
 
-Basic library for making interactive command-line applications much easier.
 
 
 ## Authors
