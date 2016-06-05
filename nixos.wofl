@@ -94,3 +94,7 @@
     * sqlite3 /nix/var/nix/db/db.sqlite 'pragma integrity_check'
       \ well... sqlite3: command not found
       \ and can't add any new packages because database malformed...
+
+* how to fix broken nixos-rebuild
+  \ https://beyermatthias.de/blog/2015/11/27/nixos-on-unstable-how-to-fix-a-broken-nixos-rebuild/
+
